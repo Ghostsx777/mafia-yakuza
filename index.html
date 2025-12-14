@@ -177,10 +177,17 @@ const db=firebase.firestore();
 
 let autorizado=false;
 
-function show(id,btn){
-  document.querySelectorAll("section").forEach(s=>s.style.display="none");
-  document.getElementById(id).style.display="block";
-  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+function show(id, btn){
+  document.querySelectorAll("section").forEach(s => s.style.display = "none");
+
+  // Somente mostrar histórico se autorizado
+  if(id === "historico" && !autorizado){
+    alert("Somente usuários autorizados podem ver o histórico");
+    return;
+  }
+
+  document.getElementById(id).style.display = "block";
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
 }
 
@@ -223,7 +230,6 @@ function updateMembro(id, campo, valor, nome){
   addHistorico(`Membro ${nome} alterou ${campo} para ${valorFinal}`);
 }
 
-// Cores de pontuação
 function color(p){
   if(p<=3)return"red";
   if(p<=6)return"yellow";
@@ -310,15 +316,17 @@ function refreshData(){
     listaCargos.innerHTML=html;
   });
 
-  // Histórico
-  db.collection("historico").orderBy("data","desc").onSnapshot(snap=>{
-    let html="";
-    snap.forEach(doc=>{
-      let d=doc.data();
-      html+=`<div>${new Date(d.data.seconds*1000).toLocaleString()} → ${d.acao}</div>`;
+  // Histórico só mostra se autorizado
+  if(autorizado){
+    db.collection("historico").orderBy("data","desc").onSnapshot(snap=>{
+      let html="";
+      snap.forEach(doc=>{
+        let d=doc.data();
+        html+=`<div>${new Date(d.data.seconds*1000).toLocaleString()} → ${d.acao}</div>`;
+      });
+      listaHistorico.innerHTML=html;
     });
-    listaHistorico.innerHTML=html;
-  });
+  }
 }
 
 show("login",document.querySelector("nav button"));
