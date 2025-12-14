@@ -74,6 +74,7 @@ input, select{
   display:flex;
   align-items:center;
   justify-content:space-between;
+  transition: background 0.3s;
 }
 
 table{
@@ -193,7 +194,7 @@ firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
 let autorizado=false;
-let cargosMap = {}; // Armazena cor dos cargos
+let cargosMap = {}; // Guarda nome -> cor
 
 function show(id, btn){
   document.querySelectorAll("section").forEach(s => s.style.display = "none");
@@ -267,10 +268,17 @@ function delMembro(id,nome){
   }
 }
 
-function updateMembro(id,campo,valor,nome){
+function updateMembro(id,campo,valor,nome,elementoCard){
   if(!autorizado) return;
   let valorFinal = campo==="punicao"||campo==="pontos"?Number(valor)||0:valor;
   db.collection("membros").doc(id).update({[campo]:valorFinal});
+
+  // Se for cargo, atualiza a cor do card
+  if(campo === "cargo" && elementoCard){
+    let cor = cargosMap[valorFinal] || '#0b1625';
+    elementoCard.style.background = cor;
+  }
+
   addHistorico(`Membro ${nome} alterou ${campo} para ${valorFinal}`);
 }
 
@@ -324,9 +332,9 @@ function refreshData(){
       let d=doc.data(),id=doc.id;
       let bg = cargosMap[d.cargo] || '#0b1625';
       if(d.punicao>=3){db.collection("membros").doc(id).delete(); return;}
-      html+=`<div class="member-card" style="background:${bg}">
-        <b contenteditable="${autorizado}" onblur="updateMembro('${id}','nome',this.innerText,'${d.nome}')">${d.nome}</b>
-        - <span contenteditable="${autorizado}" onblur="updateMembro('${id}','cargo',this.innerText,'${d.nome}')">${d.cargo}</span>
+      html+=`<div class="member-card" style="background:${bg}" id="member-${id}">
+        <b contenteditable="${autorizado}" onblur="updateMembro('${id}','nome',this.innerText,'${d.nome}',this.parentElement)">${d.nome}</b>
+        - <select ${autorizado ? '' : 'disabled'} onchange="updateMembro('${id}','cargo',this.value,'${d.nome}',this.parentElement)"></select>
         <button class="action" onclick="delMembro('${id}','${d.nome}')">Excluir</button>
       </div>`;
       pun+=`<div>${d.nome} → 
@@ -343,6 +351,25 @@ function refreshData(){
     listaMembros.innerHTML = html;
     listaPunicoes.innerHTML = pun;
     listaPontuacao.innerHTML = pt;
+
+    // Preencher os selects dos membros com os cargos
+    Object.keys(cargosMap).forEach(cargoName=>{
+      document.querySelectorAll('.member-card').forEach(card=>{
+        let select = card.querySelector('select');
+        if(select){
+          let opt = document.createElement('option');
+          opt.value = cargoName;
+          opt.text = cargoName;
+          select.appendChild(opt);
+          if(card.querySelector('b').innerText && card.querySelector('b').innerText === cargoName){
+            select.value = cargoName;
+          }
+          // Ajusta valor atual
+          let membroCargo = card.querySelector('b').nextElementSibling ? card.querySelector('b').nextElementSibling.value : '';
+          if(card.querySelector('b').nextElementSibling) card.querySelector('b').nextElementSibling.value = membroCargo;
+        }
+      });
+    });
   });
 
   // Histórico
