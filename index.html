@@ -5,7 +5,6 @@
 <title>Mafia Yakuza</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
@@ -68,6 +67,15 @@ input, select{
   margin:5px;
 }
 
+.member-card{
+  padding:5px;
+  margin:5px 0;
+  border-radius:5px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
 table{
   width:100%;
   border-collapse:collapse;
@@ -108,7 +116,6 @@ button.action:hover{
   vertical-align: middle;
 }
 
-/* Estilo da mensagem de acesso restrito */
 .mensagem-restrita{
   text-align:center;
   font-size:18px;
@@ -147,7 +154,7 @@ button.action:hover{
 <section id="membros">
   <h3>Membros</h3>
   <input id="nome" placeholder="Nome">
-  <input id="cargo" placeholder="Cargo">
+  <select id="cargoSelect"><option value="">Selecione cargo</option></select>
   <button class="action" onclick="addMembro()">Adicionar</button>
   <button class="action" onclick="exportarMembros()">Exportar Planilha</button>
   <div id="listaMembros"></div>
@@ -177,22 +184,20 @@ button.action:hover{
 </section>
 
 <script>
-// FIREBASE CONFIG
 const firebaseConfig={
   apiKey:"AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",
   authDomain:"mafia-yakuza.firebaseapp.com",
   projectId:"mafia-yakuza"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
 let autorizado=false;
+let cargosMap = {}; // Armazena cor dos cargos
 
 function show(id, btn){
   document.querySelectorAll("section").forEach(s => s.style.display = "none");
 
-  // Se for histórico e não estiver logado, mostrar mensagem
   if(id === "historico" && !autorizado){
     document.getElementById('historico').style.display = 'block';
     document.getElementById('listaHistorico').innerHTML = '<div class="mensagem-restrita">Acesso restrito: apenas líderes e subordinados autorizados podem visualizar este conteúdo.</div>';
@@ -218,39 +223,6 @@ function addHistorico(acao){
   db.collection("historico").add({acao,data:new Date()});
 }
 
-// Membros
-function addMembro(){
-  if(!autorizado) return alert("Sem permissão");
-  if(!nome.value || !cargo.value) return alert("Preencha nome e cargo");
-  db.collection("membros").add({
-    nome:nome.value,
-    cargo:cargo.value,
-    punicao:0,
-    pontos:0
-  }).then(()=>addHistorico(`Membro ${nome.value} adicionado`));
-}
-
-function delMembro(id,nome){
-  if(!autorizado) return;
-  if(confirm("Excluir membro "+nome+"?")){
-    db.collection("membros").doc(id).delete();
-    addHistorico(`Membro ${nome} removido`);
-  }
-}
-
-function updateMembro(id, campo, valor, nome){
-  if(!autorizado) return;
-  let valorFinal = campo==="punicao"||campo==="pontos"?Number(valor)||0:valor;
-  db.collection("membros").doc(id).update({[campo]:valorFinal});
-  addHistorico(`Membro ${nome} alterou ${campo} para ${valorFinal}`);
-}
-
-function color(p){
-  if(p<=3)return"red";
-  if(p<=6)return"yellow";
-  return"green";
-}
-
 // Cargos
 function addCargo(){
   if(!autorizado) return alert("Sem permissão");
@@ -273,6 +245,41 @@ function updateCargo(id, campo, valor, nome){
   addHistorico(`Cargo ${nome} alterado: ${campo} → ${valor}`);
 }
 
+// Membros
+function addMembro(){
+  if(!autorizado) return alert("Sem permissão");
+  let nomeVal = nome.value;
+  let cargoVal = cargoSelect.value;
+  if(!nomeVal || !cargoVal) return alert("Preencha nome e selecione cargo");
+  db.collection("membros").add({
+    nome: nomeVal,
+    cargo: cargoVal,
+    punicao:0,
+    pontos:0
+  }).then(()=>addHistorico(`Membro ${nomeVal} adicionado`));
+}
+
+function delMembro(id,nome){
+  if(!autorizado) return;
+  if(confirm("Excluir membro "+nome+"?")){
+    db.collection("membros").doc(id).delete();
+    addHistorico(`Membro ${nome} removido`);
+  }
+}
+
+function updateMembro(id,campo,valor,nome){
+  if(!autorizado) return;
+  let valorFinal = campo==="punicao"||campo==="pontos"?Number(valor)||0:valor;
+  db.collection("membros").doc(id).update({[campo]:valorFinal});
+  addHistorico(`Membro ${nome} alterou ${campo} para ${valorFinal}`);
+}
+
+function color(p){
+  if(p<=3)return"red";
+  if(p<=6)return"yellow";
+  return"green";
+}
+
 // Export CSV
 function exportarMembros(){
   db.collection("membros").get().then(snap=>{
@@ -289,14 +296,35 @@ function exportarMembros(){
   });
 }
 
-// Atualizar dados em tempo real
+// Atualizar dados
 function refreshData(){
+  // Carregar cargos
+  db.collection("cargos").onSnapshot(snap=>{
+    cargosMap = {};
+    let options = '<option value="">Selecione cargo</option>';
+    let htmlCargos = '';
+    snap.forEach(doc=>{
+      let d=doc.data();
+      cargosMap[d.nome] = d.cor;
+      options += `<option value="${d.nome}">${d.nome}</option>`;
+      htmlCargos += `<div>
+        <span contenteditable="${autorizado}" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span>
+        <input type="color" class="color-picker" value="${d.cor}" onchange="updateCargo('${doc.id}','cor',this.value,'${d.nome}')">
+        <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button>
+      </div>`;
+    });
+    cargoSelect.innerHTML = options;
+    listaCargos.innerHTML = htmlCargos;
+  });
+
+  // Carregar membros
   db.collection("membros").onSnapshot(snap=>{
-    let html="",pun="",pt="";
+    let html='',pun='',pt='';
     snap.forEach(doc=>{
       let d=doc.data(),id=doc.id;
+      let bg = cargosMap[d.cargo] || '#0b1625';
       if(d.punicao>=3){db.collection("membros").doc(id).delete(); return;}
-      html+=`<div>
+      html+=`<div class="member-card" style="background:${bg}">
         <b contenteditable="${autorizado}" onblur="updateMembro('${id}','nome',this.innerText,'${d.nome}')">${d.nome}</b>
         - <span contenteditable="${autorizado}" onblur="updateMembro('${id}','cargo',this.innerText,'${d.nome}')">${d.cargo}</span>
         <button class="action" onclick="delMembro('${id}','${d.nome}')">Excluir</button>
@@ -312,26 +340,12 @@ function refreshData(){
         <button class="action" onclick="updateMembro('${id}','pontos',${d.pontos-1},'${d.nome}')">-</button>
       </div>`;
     });
-    listaMembros.innerHTML=html;
-    listaPunicoes.innerHTML=pun;
-    listaPontuacao.innerHTML=pt;
+    listaMembros.innerHTML = html;
+    listaPunicoes.innerHTML = pun;
+    listaPontuacao.innerHTML = pt;
   });
 
-  // Cargos
-  db.collection("cargos").onSnapshot(snap=>{
-    let html="";
-    snap.forEach(doc=>{
-      let d=doc.data();
-      html+=`<div>
-        <span contenteditable="${autorizado}" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span>
-        <input type="color" class="color-picker" value="${d.cor}" onchange="updateCargo('${doc.id}','cor',this.value,'${d.nome}')">
-        <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button>
-      </div>`;
-    });
-    listaCargos.innerHTML=html;
-  });
-
-  // Histórico só se autorizado
+  // Histórico
   if(autorizado){
     db.collection("historico").orderBy("data","desc").onSnapshot(snap=>{
       let html="";
