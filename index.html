@@ -138,11 +138,10 @@ button.action:hover{
 
 <section id="membros">
   <h3>Membros</h3>
-  <div id="formMembros">
-    <input id="nome" placeholder="Nome" ${"disabled"}>
+  <div id="formMembros" style="display:none">
+    <input id="nome" placeholder="Nome">
     <select id="cargoSelect"><option value="">Selecione cargo</option></select>
-    <button class="action" onclick="addMembro()" style="display:none">Adicionar</button>
-    <button class="action" onclick="exportarMembros()">Exportar Planilha</button>
+    <button class="action" onclick="addMembro()">Adicionar</button>
   </div>
   <div id="listaMembros"></div>
 </section>
@@ -189,7 +188,7 @@ function show(id, btn){
 
   if(id === "historico" && !autorizado){
     document.getElementById('historico').style.display = 'block';
-    document.getElementById('listaHistorico').innerHTML = '<div class="mensagem-restrita">Acesso restrito: apenas líderes e subordinados autorizados podem visualizar este conteúdo.</div>';
+    document.getElementById('listaHistorico').innerHTML = '<div class="mensagem-restrita">Acesso restrito: apenas líderes podem visualizar esta área.</div>';
     document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     return;
@@ -204,8 +203,7 @@ function login(){
   if(senha.value==="yakuzanotopo2526"){
     autorizado=true;
     alert("Permissão concedida");
-    document.getElementById('formMembros').querySelectorAll('input, select, button')[0].disabled=false;
-    document.getElementById('formMembros').querySelectorAll('button')[0].style.display='inline-block';
+    document.getElementById('formMembros').style.display='block';
     document.getElementById('formCargos').style.display='block';
     refreshData();
   }else alert("Senha incorreta");
@@ -294,6 +292,7 @@ function exportarMembros(){
 
 // Atualizar dados
 function refreshData(){
+  // Cargos
   db.collection("cargos").onSnapshot(snap=>{
     cargosMap = {};
     let options = '<option value="">Selecione cargo</option>';
@@ -303,15 +302,16 @@ function refreshData(){
       cargosMap[d.nome] = d.cor;
       options += `<option value="${d.nome}">${d.nome}</option>`;
       htmlCargos += `<div>
-        <span contenteditable="${autorizado}" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span>
+        ${autorizado ? `<span contenteditable="true" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span>
         <input type="color" class="color-picker" value="${d.cor}" onchange="updateCargo('${doc.id}','cor',this.value,'${d.nome}')">
-        <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button>
+        <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button>` : `${d.nome} <div style="display:inline-block;width:20px;height:20px;background:${d.cor};margin-left:5px;"></div>`}
       </div>`;
     });
     cargoSelect.innerHTML = options;
     listaCargos.innerHTML = htmlCargos;
   });
 
+  // Membros
   db.collection("membros").onSnapshot(snap=>{
     let html='',pun='',pt='';
     snap.forEach(doc=>{
@@ -320,7 +320,7 @@ function refreshData(){
       if(d.punicao>=3){db.collection("membros").doc(id).delete(); return;}
       html+=`<div class="member-card" style="background:${bg}" id="member-${id}">
         <b>${d.nome}</b>
-        - <select disabled></select>
+        - <span>${d.cargo}</span>
         ${autorizado ? `<button class="action" onclick="delMembro('${id}','${d.nome}')">Excluir</button>` : ''}
       </div>`;
       pun+=`<div>${d.nome} → <span>${d.punicao}</span></div>`;
@@ -329,22 +329,6 @@ function refreshData(){
     listaMembros.innerHTML = html;
     listaPunicoes.innerHTML = pun;
     listaPontuacao.innerHTML = pt;
-
-    // preencher selects
-    document.querySelectorAll('.member-card').forEach(card=>{
-      let select = card.querySelector('select');
-      select.innerHTML = '<option value="">Selecione cargo</option>';
-      Object.keys(cargosMap).forEach(cargoName=>{
-        let opt = document.createElement('option');
-        opt.value = cargoName;
-        opt.text = cargoName;
-        select.appendChild(opt);
-        if(card.querySelector('b').innerText && card.querySelector('b').innerText === cargoName){
-          select.value = cargoName;
-        }
-      });
-      if(autorizado) select.disabled = false;
-    });
   });
 
   if(autorizado){
@@ -359,7 +343,7 @@ function refreshData(){
   }
 }
 
-show("login",document.querySelector("nav button"));
+show("membros",document.querySelector("nav button"));
 </script>
 
 </body>
