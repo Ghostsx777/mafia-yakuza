@@ -107,6 +107,18 @@ button.action:hover{
   cursor:pointer;
   vertical-align: middle;
 }
+
+/* Estilo da mensagem de acesso restrito */
+.mensagem-restrita{
+  text-align:center;
+  font-size:18px;
+  color:#c9c9c9;
+  padding:50px 0;
+  font-weight:bold;
+  border:2px dashed #555;
+  border-radius:10px;
+  background:#0b1625;
+}
 </style>
 </head>
 
@@ -180,9 +192,12 @@ let autorizado=false;
 function show(id, btn){
   document.querySelectorAll("section").forEach(s => s.style.display = "none");
 
-  // Somente mostrar histórico se autorizado
+  // Se for histórico e não estiver logado, mostrar mensagem
   if(id === "historico" && !autorizado){
-    alert("Somente usuários autorizados podem ver o histórico");
+    document.getElementById('historico').style.display = 'block';
+    document.getElementById('listaHistorico').innerHTML = '<div class="mensagem-restrita">Acesso restrito: apenas líderes e subordinados autorizados podem visualizar este conteúdo.</div>';
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
     return;
   }
 
@@ -316,7 +331,7 @@ function refreshData(){
     listaCargos.innerHTML=html;
   });
 
-  // Histórico só mostra se autorizado
+  // Histórico só se autorizado
   if(autorizado){
     db.collection("historico").orderBy("data","desc").onSnapshot(snap=>{
       let html="";
