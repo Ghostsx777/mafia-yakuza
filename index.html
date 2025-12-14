@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Mafia Yakuza</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: Arial; background:#0d1b2a; color:white; margin:0 }
+    header { background:#1b263b; padding:15px; text-align:center }
+    nav button { margin:5px; padding:10px; background:#415a77; color:white; border:none; cursor:pointer }
+    section { display:none; padding:20px }
+    table { width:100%; border-collapse:collapse }
+    th,td { border:1px solid #778da9; padding:8px; text-align:center }
+    input { padding:5px }
+    .red { background:#c1121f }
+    .yellow { background:#fca311; color:black }
+    .green { background:#2a9d8f }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🐉 Máfia Yakuza</h1>
+</header>
+
+<nav>
+  <button onclick="show('login')">Login</button>
+  <button onclick="show('acoes')">Ações</button>
+  <button onclick="show('membros')">Membros</button>
+  <button onclick="show('punicoes')">Punições</button>
+  <button onclick="show('pontuacao')">Pontuação</button>
+</nav>
+
+<section id="login">
+  <h2>🔒 Permissão</h2>
+  <input type="password" id="senha" placeholder="Senha">
+  <button onclick="login()">Entrar</button>
+</section>
+
+<section id="acoes">
+  <h2>Ações</h2>
+  <div id="acoesLista"></div>
+</section>
+
+<section id="membros">
+  <h2>Membros</h2>
+  <input id="nome" placeholder="Nome">
+  <input id="cargo" placeholder="Cargo">
+  <button onclick="addMembro()">Adicionar</button>
+  <div id="listaMembros"></div>
+</section>
+
+<section id="punicoes">
+  <h2>Punições</h2>
+  <div id="listaPunicoes"></div>
+</section>
+
+<section id="pontuacao">
+  <h2>Pontuação</h2>
+  <div id="listaPontuacao"></div>
+</section>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",
+    authDomain: "mafia-yakuza.firebaseapp.com",
+    projectId: "mafia-yakuza",
+    storageBucket: "mafia-yakuza.firebasestorage.app",
+    messagingSenderId: "1016636741026",
+    appId: "1:1016636741026:web:b6d6f926141256f7cecefb"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let autorizado = false;
+
+  function show(id){
+    document.querySelectorAll("section").forEach(s=>s.style.display="none");
+    document.getElementById(id).style.display="block";
+  }
+
+  function login(){
+    if(document.getElementById("senha").value === "ghost2005"){
+      autorizado = true;
+      alert("Permissão concedida");
+    } else alert("Senha incorreta");
+  }
+
+  function addMembro(){
+    if(!autorizado) return alert("Sem permissão");
+    db.collection("membros").add({
+      nome: nome.value,
+      cargo: cargo.value,
+      punicao:0,
+      pontos:0
+    });
+  }
+
+  db.collection("membros").onSnapshot(snap=>{
+    let html="";
+    snap.forEach(doc=>{
+      let d=doc.data();
+      html+=`${d.nome} - ${d.cargo}<br>`;
+    });
+    listaMembros.innerHTML=html;
+  });
+
+  show("login");
+</script>
+
+</body>
+</html>
