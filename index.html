@@ -241,8 +241,9 @@ function color(p){ if(p<=3) return "red"; if(p<=6) return "yellow"; return "gree
 // Export CSV
 function exportarMembros(){ db.collection("membros").get().then(snap=>{ let csv="Nome,Cargo,Punição,Pontos\n"; snap.forEach(doc=>{ let d=doc.data(); csv+=`${d.nome},${d.cargo},${d.punicao},${d.pontos}\n`; }); let blob = new Blob([csv], {type:"text/csv"}); let link = document.createElement("a"); link.href=URL.createObjectURL(blob); link.download="membros.csv"; link.click(); }); }
 
-// Atualizar dados para todos
+// Atualizar dados para todos (visualização sempre ativa)
 function refreshData(){
+  // Cargos
   db.collection("cargos").onSnapshot(snap=>{
     cargosMap={};
     let options='<option value="">Selecione cargo</option>';
@@ -257,6 +258,7 @@ function refreshData(){
     listaCargos.innerHTML=htmlCargos;
   });
 
+  // Membros
   db.collection("membros").onSnapshot(snap=>{
     let html='',pun='',pt='';
     snap.forEach(doc=>{
@@ -271,6 +273,7 @@ function refreshData(){
     listaPontuacao.innerHTML=pt;
   });
 
+  // Histórico
   if(autorizado){
     db.collection("historico").orderBy("data","desc").onSnapshot(snap=>{
       let html='';
