@@ -1,115 +1,160 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Mafia Yakuza</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <style>
-    body { font-family: Arial; background:#0d1b2a; color:white; margin:0 }
-    header { background:#1b263b; padding:15px; text-align:center }
-    nav button { margin:5px; padding:10px; background:#415a77; color:white; border:none; cursor:pointer }
-    section { display:none; padding:20px }
-    table { width:100%; border-collapse:collapse }
-    th,td { border:1px solid #778da9; padding:8px; text-align:center }
-    input { padding:5px }
-    .red { background:#c1121f }
-    .yellow { background:#fca311; color:black }
-    .green { background:#2a9d8f }
-  </style>
+<meta charset="UTF-8">
+<title>Máfia Yakuza</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+body { font-family: Arial; background:#0d1b2a; color:white; margin:0 }
+header { background:#1b263b; padding:15px; text-align:center }
+nav button { margin:5px; padding:10px; background:#415a77; color:white; border:none; cursor:pointer }
+section { display:none; padding:20px }
+table { width:100%; border-collapse:collapse; margin-top:10px }
+th,td { border:1px solid #778da9; padding:8px; text-align:center }
+input { padding:5px }
+.red { background:#c1121f }
+.yellow { background:#fca311; color:black }
+.green { background:#2a9d8f }
+</style>
 </head>
+
 <body>
 
 <header>
-  <h1>🐉 Máfia Yakuza</h1>
+<h1>🐉 Máfia Yakuza</h1>
 </header>
 
 <nav>
-  <button onclick="show('login')">Login</button>
-  <button onclick="show('acoes')">Ações</button>
-  <button onclick="show('membros')">Membros</button>
-  <button onclick="show('punicoes')">Punições</button>
-  <button onclick="show('pontuacao')">Pontuação</button>
+<button onclick="show('login')">Login</button>
+<button onclick="show('membros')">Membros</button>
+<button onclick="show('punicoes')">Punições</button>
+<button onclick="show('pontuacao')">Pontuação</button>
 </nav>
 
 <section id="login">
-  <h2>🔒 Permissão</h2>
-  <input type="password" id="senha" placeholder="Senha">
-  <button onclick="login()">Entrar</button>
-</section>
-
-<section id="acoes">
-  <h2>Ações</h2>
-  <div id="acoesLista"></div>
+<h2>🔒 Permissão</h2>
+<input type="password" id="senha" placeholder="Senha">
+<button onclick="login()">Entrar</button>
 </section>
 
 <section id="membros">
-  <h2>Membros</h2>
-  <input id="nome" placeholder="Nome">
-  <input id="cargo" placeholder="Cargo">
-  <button onclick="addMembro()">Adicionar</button>
-  <div id="listaMembros"></div>
+<h2>👥 Membros</h2>
+<input id="nome" placeholder="Nome">
+<input id="cargo" placeholder="Cargo">
+<button onclick="addMembro()">Adicionar</button>
+
+<table>
+<tr><th>Nome</th><th>Cargo</th></tr>
+<tbody id="tabelaMembros"></tbody>
+</table>
 </section>
 
 <section id="punicoes">
-  <h2>Punições</h2>
-  <div id="listaPunicoes"></div>
+<h2>⚠️ Punições (3 = removido)</h2>
+
+<table>
+<tr><th>Nome</th><th>Cargo</th><th>Pontos</th><th>+</th></tr>
+<tbody id="tabelaPunicoes"></tbody>
+</table>
 </section>
 
 <section id="pontuacao">
-  <h2>Pontuação</h2>
-  <div id="listaPontuacao"></div>
+<h2>⭐ Pontuação (0–10)</h2>
+
+<table>
+<tr><th>Nome</th><th>Pontuação</th><th>+</th></tr>
+<tbody id="tabelaPontuacao"></tbody>
+</table>
 </section>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",
-    authDomain: "mafia-yakuza.firebaseapp.com",
-    projectId: "mafia-yakuza",
-    storageBucket: "mafia-yakuza.firebasestorage.app",
-    messagingSenderId: "1016636741026",
-    appId: "1:1016636741026:web:b6d6f926141256f7cecefb"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",
+  authDomain: "mafia-yakuza.firebaseapp.com",
+  projectId: "mafia-yakuza",
+  storageBucket: "mafia-yakuza.firebasestorage.app",
+  messagingSenderId: "1016636741026",
+  appId: "1:1016636741026:web:b6d6f926141256f7cecefb"
+};
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-  let autorizado = false;
+let autorizado = false;
 
-  function show(id){
-    document.querySelectorAll("section").forEach(s=>s.style.display="none");
-    document.getElementById(id).style.display="block";
-  }
+function show(id){
+document.querySelectorAll("section").forEach(s=>s.style.display="none");
+document.getElementById(id).style.display="block";
+}
 
-  function login(){
-    if(document.getElementById("senha").value === "ghost2005"){
-      autorizado = true;
-      alert("Permissão concedida");
-    } else alert("Senha incorreta");
-  }
+function login(){
+if(senha.value === "ghost2005"){
+autorizado = true;
+alert("Permissão concedida");
+} else alert("Senha incorreta");
+}
 
-  function addMembro(){
-    if(!autorizado) return alert("Sem permissão");
-    db.collection("membros").add({
-      nome: nome.value,
-      cargo: cargo.value,
-      punicao:0,
-      pontos:0
-    });
-  }
+function addMembro(){
+if(!autorizado) return alert("Sem permissão");
+db.collection("membros").add({
+nome:nome.value,
+cargo:cargo.value,
+punicao:0,
+pontuacao:0
+});
+nome.value=""; cargo.value="";
+}
 
-  db.collection("membros").onSnapshot(snap=>{
-    let html="";
-    snap.forEach(doc=>{
-      let d=doc.data();
-      html+=`${d.nome} - ${d.cargo}<br>`;
-    });
-    listaMembros.innerHTML=html;
-  });
+db.collection("membros").onSnapshot(snap=>{
+let membros="", punicoes="", pontos="";
+snap.forEach(doc=>{
+let d=doc.data();
 
-  show("login");
+membros+=`<tr><td>${d.nome}</td><td>${d.cargo}</td></tr>`;
+
+punicoes+=`<tr>
+<td>${d.nome}</td>
+<td>${d.cargo}</td>
+<td>${d.punicao}</td>
+<td><button onclick="punir('${doc.id}',${d.punicao})">+</button></td>
+</tr>`;
+
+let cor = d.pontuacao<=3?"red":d.pontuacao<=6?"yellow":"green";
+pontos+=`<tr class="${cor}">
+<td>${d.nome}</td>
+<td>${d.pontuacao}</td>
+<td><button onclick="pontuar('${doc.id}',${d.pontuacao})">+</button></td>
+</tr>`;
+});
+
+tabelaMembros.innerHTML=membros;
+tabelaPunicoes.innerHTML=punicoes;
+tabelaPontuacao.innerHTML=pontos;
+});
+
+function punir(id, atual){
+if(!autorizado) return;
+if(atual+1 >=3){
+db.collection("membros").doc(id).delete();
+} else {
+db.collection("membros").doc(id).update({punicao: atual+1});
+}
+}
+
+function pontuar(id, atual){
+if(!autorizado) return;
+if(atual <10){
+db.collection("membros").doc(id).update({pontuacao: atual+1});
+}
+}
+
+show("login");
 </script>
 
 </body>
 </html>
+
