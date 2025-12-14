@@ -40,6 +40,7 @@ header img{
 nav{
   display:flex;
   background:#020814;
+  flex-wrap: wrap;
 }
 
 nav button{
@@ -125,14 +126,12 @@ button.action:hover{
   <button onclick="show('historico',this)">Histórico</button>
 </nav>
 
-<!-- LOGIN -->
 <section id="login">
   <h3>🔒 Permissão</h3>
   <input type="password" id="senha" placeholder="Senha">
   <button class="action" onclick="login()">Entrar</button>
 </section>
 
-<!-- MEMBROS -->
 <section id="membros">
   <h3>Membros</h3>
   <input id="nome" placeholder="Nome">
@@ -142,19 +141,16 @@ button.action:hover{
   <div id="listaMembros"></div>
 </section>
 
-<!-- PUNIÇÕES -->
 <section id="punicoes">
-  <h3>Punições (3 = remoção)</h3>
+  <h3>Punições</h3>
   <div id="listaPunicoes"></div>
 </section>
 
-<!-- PONTUAÇÃO -->
 <section id="pontuacao">
   <h3>Pontuação</h3>
   <div id="listaPontuacao"></div>
 </section>
 
-<!-- CARGOS -->
 <section id="cargos">
   <h3>Cargos</h3>
   <input id="novoCargo" placeholder="Nome do cargo">
@@ -163,14 +159,13 @@ button.action:hover{
   <div id="listaCargos"></div>
 </section>
 
-<!-- HISTÓRICO -->
 <section id="historico">
   <h3>Histórico de alterações</h3>
   <div id="listaHistorico"></div>
 </section>
 
 <script>
-// CONFIG FIREBASE
+// FIREBASE CONFIG
 const firebaseConfig={
   apiKey:"AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",
   authDomain:"mafia-yakuza.firebaseapp.com",
@@ -182,7 +177,6 @@ const db=firebase.firestore();
 
 let autorizado=false;
 
-// FUNÇÃO PARA NAVEGAR ENTRE SEÇÕES
 function show(id,btn){
   document.querySelectorAll("section").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
@@ -190,7 +184,6 @@ function show(id,btn){
   btn.classList.add("active");
 }
 
-// LOGIN
 function login(){
   if(senha.value==="yakuzanotopo2526"){
     autorizado=true;
@@ -199,12 +192,11 @@ function login(){
   }else alert("Senha incorreta");
 }
 
-// HISTÓRICO
 function addHistorico(acao){
   db.collection("historico").add({acao,data:new Date()});
 }
 
-// FUNÇÕES MEMBROS
+// Membros
 function addMembro(){
   if(!autorizado) return alert("Sem permissão");
   if(!nome.value || !cargo.value) return alert("Preencha nome e cargo");
@@ -231,14 +223,14 @@ function updateMembro(id, campo, valor, nome){
   addHistorico(`Membro ${nome} alterou ${campo} para ${valorFinal}`);
 }
 
-// FUNÇÕES PUNIÇÃO E PONTUAÇÃO
+// Cores de pontuação
 function color(p){
   if(p<=3)return"red";
   if(p<=6)return"yellow";
   return"green";
 }
 
-// FUNÇÕES CARGOS
+// Cargos
 function addCargo(){
   if(!autorizado) return alert("Sem permissão");
   if(!novoCargo.value) return alert("Preencha o cargo");
@@ -260,7 +252,7 @@ function updateCargo(id, campo, valor, nome){
   addHistorico(`Cargo ${nome} alterado: ${campo} → ${valor}`);
 }
 
-// EXPORTAR PLANILHA CSV
+// Export CSV
 function exportarMembros(){
   db.collection("membros").get().then(snap=>{
     let csv="Nome,Cargo,Punição,Pontos\n";
@@ -276,36 +268,24 @@ function exportarMembros(){
   });
 }
 
-// ATUALIZAR DADOS EM TEMPO REAL
+// Atualizar dados em tempo real
 function refreshData(){
-  // Membros
   db.collection("membros").onSnapshot(snap=>{
     let html="",pun="",pt="";
     snap.forEach(doc=>{
-      let d=doc.data();
-      let id=doc.id;
-
-      // Remover automaticamente se punição >= 3
+      let d=doc.data(),id=doc.id;
       if(d.punicao>=3){db.collection("membros").doc(id).delete(); return;}
-
-      html+=`
-      <div>
+      html+=`<div>
         <b contenteditable="${autorizado}" onblur="updateMembro('${id}','nome',this.innerText,'${d.nome}')">${d.nome}</b>
         - <span contenteditable="${autorizado}" onblur="updateMembro('${id}','cargo',this.innerText,'${d.nome}')">${d.cargo}</span>
         <button class="action" onclick="delMembro('${id}','${d.nome}')">Excluir</button>
       </div>`;
-
-      pun+=`
-      <div>
-        ${d.nome} → 
+      pun+=`<div>${d.nome} → 
         <span contenteditable="${autorizado}" onblur="updateMembro('${id}','punicao',this.innerText,'${d.nome}')">${d.punicao}</span>
         <button class="action" onclick="updateMembro('${id}','punicao',${d.punicao+1},'${d.nome}')">+</button>
         <button class="action" onclick="updateMembro('${id}','punicao',${d.punicao-1},'${d.nome}')">-</button>
       </div>`;
-
-      pt+=`
-      <div class="${color(d.pontos)}">
-        ${d.nome} → 
+      pt+=`<div class="${color(d.pontos)}">${d.nome} → 
         <span contenteditable="${autorizado}" onblur="updateMembro('${id}','pontos',this.innerText,'${d.nome}')">${d.pontos}</span>
         <button class="action" onclick="updateMembro('${id}','pontos',${d.pontos+1},'${d.nome}')">+</button>
         <button class="action" onclick="updateMembro('${id}','pontos',${d.pontos-1},'${d.nome}')">-</button>
