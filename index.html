@@ -205,7 +205,6 @@ function login(){
     alert("Permissão concedida");
     document.getElementById('formMembros').style.display='block';
     document.getElementById('formCargos').style.display='block';
-    refreshData();
   }else alert("Senha incorreta");
 }
 
@@ -290,7 +289,7 @@ function exportarMembros(){
   });
 }
 
-// Atualizar dados
+// Atualizar dados para todos, edição bloqueada para não logados
 function refreshData(){
   // Cargos
   db.collection("cargos").onSnapshot(snap=>{
@@ -317,7 +316,6 @@ function refreshData(){
     snap.forEach(doc=>{
       let d=doc.data(),id=doc.id;
       let bg = cargosMap[d.cargo] || '#0b1625';
-      if(d.punicao>=3){db.collection("membros").doc(id).delete(); return;}
       html+=`<div class="member-card" style="background:${bg}" id="member-${id}">
         <b>${d.nome}</b>
         - <span>${d.cargo}</span>
@@ -331,6 +329,7 @@ function refreshData(){
     listaPontuacao.innerHTML = pt;
   });
 
+  // Histórico
   if(autorizado){
     db.collection("historico").orderBy("data","desc").onSnapshot(snap=>{
       let html="";
@@ -343,6 +342,8 @@ function refreshData(){
   }
 }
 
+// Carregar dados assim que abrir o site, para todos visualizarem
+refreshData();
 show("membros",document.querySelector("nav button"));
 </script>
 
