@@ -67,7 +67,7 @@ input, select{
   margin:5px;
 }
 
-.member-card{
+.member-card, .cronograma-row{
   padding:5px;
   margin:5px 0;
   border-radius:5px;
@@ -116,6 +116,9 @@ button.action:hover{
 .red{background:#9b1c1c}
 .yellow{background:#c9a227;color:black}
 .green{background:#137333}
+
+.cronograma-table{width:100%;border-collapse:collapse;margin-top:10px;}
+.cronograma-table th, .cronograma-table td{border:1px solid #1f2a44;padding:8px;text-align:center;}
 </style>
 </head>
 
@@ -177,11 +180,9 @@ button.action:hover{
   <h3>Cronograma</h3>
   <div id="formCronograma" style="display:none">
     <input id="tituloCronograma" placeholder="Título da ação">
-    <input type="text" id="acaoCronograma" placeholder="Ação da organização">
-    <select id="numeroCronograma">
-      ${[...Array(21).keys()].map(i => `<option value="${i}">${i}</option>`).join('')}
-    </select>
-    <button class="action" onclick="addCronograma()">Adicionar ao cronograma</button>
+    <input id="acaoCronograma" placeholder="Ação">
+    <select id="numeroCronograma">${[...Array(21).keys()].map(i=>`<option value="${i}">${i}</option>`).join('')}</select>
+    <button class="action" onclick="addCronograma()">Adicionar</button>
   </div>
   <div id="listaCronograma"></div>
 </section>
@@ -311,7 +312,7 @@ function refreshData(){
     listaCargos.innerHTML=htmlCargos;
   });
 
-  // Membros ordenados
+  // Membros
   db.collection("membros").orderBy("ordem","asc").onSnapshot(snap=>{
     let html='',pun='',pt='';
     snap.forEach(doc=>{
@@ -323,7 +324,7 @@ function refreshData(){
       // Punições
       pun+=`<div>${nomeDisplay} → <span class="${punicaoClass(d.punicao)}">${d.punicao}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao+1},'${d.nome}')">+</button>`:''}</div>`;
 
-      // Pontuação com cores dinâmicas
+      // Pontuação
       pt+=`<div class="${colorPontuacao(d.pontos)}">${nomeDisplay} → <span>${d.pontos}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos+1},'${d.nome}')">+</button>`:''}</div>`;
     });
     listaMembros.innerHTML=html;
@@ -337,11 +338,9 @@ function refreshData(){
     snap.forEach(doc=>{
       let d = doc.data();
       let numeroOptions = [...Array(21).keys()].map(i => `<option value="${i}" ${i===d.numero?'selected':''}>${i}</option>`).join('');
-      html+=`<div style="display:flex;align-items:center;gap:10px;margin:5px 0;">
+      html+=`<div class="cronograma-row" style="display:flex;align-items:center;gap:10px;">
         <b>${d.titulo}</b> | <span>${d.acao}</span> 
-        <select ${autorizado?`onchange="updateCronograma('${doc.id}',this.value)"`:'disabled'}>
-          ${numeroOptions}
-        </select>
+        <select ${autorizado?`onchange="updateCronograma('${doc.id}',this.value)"`:'disabled'}>${numeroOptions}</select>
         ${autorizado?`<button class="action" onclick="delCronograma('${doc.id}','${d.titulo}')">Excluir</button>`:''}
       </div>`;
     });
