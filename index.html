@@ -2,25 +2,29 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Mafia Yakuza</title>
+<title>Máfia Yakuza - Painel de Controle</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
+/* NOVOS ESTILOS: PRETO E AZUL PROFISSIONAL */
 :root{
-  --bg:#050b14;
-  --panel:#0b1625;
-  --blue:#1f6feb;
-  --blue-dark:#0a3d91;
-  --text:#ffffff;
+  --bg:#121212; /* Fundo preto escuro */
+  --panel:#1e1e1e; /* Painéis mais claros */
+  --blue-accent:#4a90e2; /* Azul vibrante para destaque e botões */
+  --blue-dark:#2c5a93; /* Azul mais escuro para hover */
+  --text:#e0e0e0; /* Texto claro */
+  --text-dark:#ffffff; /* Texto branco em acentos */
+  --border:#333333; /* Borda sutil */
 }
 body{
   margin:0;
-  font-family:Arial, Helvetica, sans-serif;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background:var(--bg);
   color:var(--text);
+  line-height: 1.6;
 }
 header{
   background:var(--panel);
@@ -28,11 +32,13 @@ header{
   display:flex;
   align-items:center;
   gap:15px;
+  border-bottom: 2px solid var(--blue-accent);
 }
 header img{height:50px;}
+header h2{color:var(--blue-accent); font-weight: 300; letter-spacing: 2px;}
 nav{
   display:flex;
-  background:#020814;
+  background:#0a0a0a;
   flex-wrap: wrap;
 }
 nav button{
@@ -40,84 +46,122 @@ nav button{
   padding:15px;
   background:none;
   border:none;
-  color:white;
+  color:var(--text);
   cursor:pointer;
-  font-size:15px;
+  font-size:16px;
+  transition: background 0.3s, color 0.3s;
 }
 nav button.active,nav button:hover{
-  background:var(--blue);
+  background:var(--blue-accent);
+  color:var(--text-dark);
 }
 section{
   display:none;
   padding:20px;
+  background: var(--bg);
 }
+h3{color:var(--blue-accent); border-bottom: 1px solid var(--border); padding-bottom: 5px;}
 input, select{
-  padding:8px;
-  margin:5px;
+  padding:10px;
+  margin:8px 5px;
   border-radius:5px;
-  border:none;
+  border:1px solid var(--border);
+  background:var(--panel);
+  color:var(--text);
+  transition: border-color 0.3s;
+}
+input:focus, select:focus {
+  border-color: var(--blue-accent);
+  outline: none;
 }
 button.action{
-  background:var(--blue);
+  background:var(--blue-accent);
   border:none;
-  color:white;
-  padding:5px 10px;
+  color:var(--text-dark);
+  padding:8px 15px;
   cursor:pointer;
   margin-left:5px;
+  border-radius: 5px;
+  transition: background 0.3s;
 }
 button.action:hover{background:var(--blue-dark);}
-.color-picker{width:40px;height:25px;border:none;cursor:pointer;vertical-align: middle;}
+.color-picker{width:40px;height:25px;border:none;cursor:pointer;vertical-align: middle; background: transparent;}
 .mensagem-restrita{
   text-align:center;
   font-size:18px;
-  color:#c9c9c9;
+  color:var(--text);
   padding:50px 0;
   font-weight:bold;
-  border:2px dashed #555;
+  border:2px dashed var(--blue-accent);
   border-radius:10px;
-  background:#0b1625;
+  background:var(--panel);
 }
-.member-container div{margin:5px 0;}
-.red{background:#9b1c1c}
-.yellow{background:#c9a227;color:black}
+.member-container div{
+  margin:10px 0;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Cores de status */
+.red{background:#b80f0f;}
+.yellow{background:#d89c09;color:black}
 .orange{background:#e67e22;color:black}
-.green{background:#137333}
+.green{background:#117937}
 
 /* Cronograma estilo planilha */
 .cronograma-container{
   display:grid;
-  grid-template-columns: 2fr 5fr 1fr 1fr;
-  gap:5px;
-  margin-top:10px;
+  /* 2fr (Título) | 4fr (Ação) | 1fr (Número) | 1fr (Ações) */
+  grid-template-columns: 2fr 4fr 1fr 1fr;
+  gap: 1px; /* Linhas finas entre as células para visual de planilha */
+  margin-top:15px;
+  background: var(--border); /* Cor de fundo para simular as bordas das células */
+  border-radius: 5px;
+  overflow: hidden; /* Garante que o raio de borda funcione */
 }
 .cronograma-header{
   font-weight:bold;
   text-align:center;
   text-transform:uppercase;
-  background:#0b1625;
-  border:1px solid #1f2a44;
-  padding:8px;
-  border-radius:5px;
-}
-.cronograma-cell{
-  padding:8px;
-  border:1px solid #1f2a44;
-  border-radius:5px;
-  min-height:35px;
+  background:var(--blue-accent);
+  color: var(--text-dark);
+  padding:10px 8px;
+  border:none;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-weight:bold;
-  color:white;
+}
+.cronograma-cell{
+  padding:8px;
+  border:none;
+  min-height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:400;
+  color:var(--text-dark); /* Cor do texto dentro das células do cronograma */
+  background:var(--panel); /* Padrão, será sobrescrito pela cor customizada */
   transition: background 0.3s;
 }
+.cronograma-cell span[contenteditable="true"] {
+  width: 100%;
+  min-height: 20px;
+  padding: 2px 5px;
+  outline: 1px dashed rgba(255, 255, 255, 0.3); /* Destaque para edição */
+  cursor: text;
+}
 .cronograma-input{
-  width:100%;
+  width:90%;
   border:none;
   background:transparent;
   text-align:center;
   font-weight:bold;
-  color:white;
+  color:var(--text-dark);
+  padding: 0;
 }
 .drag-button{
   cursor:pointer;
@@ -129,8 +173,8 @@ button.action:hover{background:var(--blue-dark);}
 <body>
 
 <header>
-  <img src="logo.png">
-  <h2>Máfia Yakuza</h2>
+  <img src="logo.png" alt="Logo Máfia Yakuza">
+  <h2>MÁFIA YAKUZA</h2>
 </header>
 
 <nav>
@@ -145,15 +189,15 @@ button.action:hover{background:var(--blue-dark);}
 
 <section id="login">
   <h3>🔒 Permissão de edição</h3>
-  <input type="password" id="senha" placeholder="Senha">
+  <input type="password" id="senha" placeholder="Senha de Edição">
   <button class="action" onclick="login()">Ativar edição</button>
 </section>
 
 <section id="membros">
-  <h3>Membros</h3>
+  <h3>Lista de Membros Ativos</h3>
   <div id="formMembros" style="display:none">
-    <input id="nome" placeholder="Nome">
-    <select id="cargoSelect"><option value="">Selecione cargo</option></select>
+    <input id="nome" placeholder="Nome do Membro">
+    <select id="cargoSelect"><option value="">Selecione o Cargo</option></select>
     <button class="action" onclick="addMembro()">Adicionar Membro</button>
   </div>
   <div id="listaMembros" class="member-container"></div>
@@ -165,36 +209,36 @@ button.action:hover{background:var(--blue-dark);}
 </section>
 
 <section id="pontuacao">
-  <h3>Pontuação</h3>
+  <h3>Pontuação de Atividade</h3>
   <div id="listaPontuacao" class="member-container"></div>
 </section>
 
 <section id="cargos">
-  <h3>Cargos</h3>
+  <h3>Gerenciar Cargos</h3>
   <div id="formCargos" style="display:none">
     <input id="novoCargo" placeholder="Nome do cargo">
-    <input type="color" id="corCargo" value="#1f6feb">
+    <input type="color" id="corCargo" value="#4a90e2">
     <button class="action" onclick="addCargo()">Adicionar Cargo</button>
   </div>
   <div id="listaCargos"></div>
 </section>
 
 <section id="cronograma">
-  <h3>Cronograma</h3>
+  <h3>Cronograma Semanal</h3>
   <div id="formCronograma" style="display:none">
-    <input id="tituloCronograma" placeholder="Cronograma">
-    <input id="acaoCronograma" placeholder="Ação">
+    <input id="tituloCronograma" placeholder="Título (Ex: Segunda-feira)">
+    <input id="acaoCronograma" placeholder="Ação (Ex: Assaltos)">
     <input type="number" id="numeroCronograma" value="0" min="0" max="20">
-    <input type="color" id="corTitulo" value="#0b1625" title="Cor do Cronograma">
-    <input type="color" id="corAcao" value="#0b1625" title="Cor da Ação">
-    <input type="color" id="corNumero" value="#1f6feb" title="Cor do Número">
-    <button class="action" onclick="addCronograma()">Adicionar</button>
+    <input type="color" id="corTitulo" value="#1e1e1e" title="Cor do Título">
+    <input type="color" id="corAcao" value="#1e1e1e" title="Cor da Ação">
+    <input type="color" id="corNumero" value="#4a90e2" title="Cor do Número">
+    <button class="action" onclick="addCronograma()">Adicionar Entrada</button>
   </div>
   <div id="listaCronograma" class="cronograma-container"></div>
 </section>
 
 <section id="historico">
-  <h3>Histórico de alterações</h3>
+  <h3>Histórico de Alterações</h3>
   <div id="listaHistorico"></div>
 </section>
 
@@ -231,6 +275,7 @@ function show(id, btn){
 
 // Login
 function login(){
+    // SENHA INSEGURA AQUI
     if(senha.value==="yakuzanotopo2526"){
         autorizado=true;
         alert("Edição ativada!");
@@ -298,7 +343,7 @@ function refreshCargos(){
             let d=doc.data();
             cargosMap[d.nome]=d.cor;
             options+=`<option value="${d.nome}">${d.nome}</option>`;
-            htmlCargos+=autorizado? `<div><span contenteditable="true" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span> <input type="color" class="color-picker" value="${d.cor}" onchange="updateCargo('${doc.id}','cor',this.value,'${d.nome}')"> <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button></div>` : `<div>${d.nome} <div style="display:inline-block;width:20px;height:20px;background:${d.cor};margin-left:5px;"></div></div>`;
+            htmlCargos+=autorizado? `<div><span contenteditable="true" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span> <input type="color" class="color-picker" value="${d.cor}" onchange="updateCargo('${doc.id}','cor',this.value,'${d.nome}')"> <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button></div>` : `<div>${d.nome} <div style="display:inline-block;width:20px;height:20px;background:${d.cor};margin-left:5px; border: 1px solid var(--border)"></div></div>`;
         });
         cargoSelect.innerHTML=options;
         listaCargos.innerHTML=htmlCargos;
@@ -315,7 +360,6 @@ function addMembro() {
     if(!nomeVal) return alert("Digite o nome do membro");
     if(!cargoVal) return alert("Selecione o cargo");
     
-    // Define a ordem: último valor de ordem + 1
     const newOrder = membrosData.length > 0 ? membrosData[membrosData.length - 1].order + 1 : 0;
 
     db.collection("membros").add({
@@ -323,7 +367,7 @@ function addMembro() {
         cargo: cargoVal, 
         punicao: 0, 
         pontos: 0,
-        order: newOrder // Campo de ordenação
+        order: newOrder
     })
     .then(()=>{
         document.getElementById("nome").value=""; 
@@ -340,7 +384,6 @@ function refreshData(){
 }
 
 function refreshMembros(){
-    // Ordena por "order" para manter a ordem definida pelos botões
     db.collection("membros").orderBy("order").onSnapshot(snap=>{
         membrosData=[];
         snap.forEach(doc=>{
@@ -355,12 +398,14 @@ function refreshMembros(){
 function renderMembros(){
     let html='';
     membrosData.forEach((m)=>{
-        let cor = cargosMap[m.cargo]||'#0b1625';
-        html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
-        <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','nome',this.innerText)">${m.nome}</span> - 
-        <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','cargo',this.innerText)">${m.cargo}</span>
+        let cor = cargosMap[m.cargo]||'#1e1e1e';
+        html+=`<div style="background:${cor};">
+        <span><span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','nome',this.innerText)">${m.nome}</span> - 
+        <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','cargo',this.innerText)">${m.cargo}</span></span>
+        <div>
         ${autorizado?`<button class="action" onclick="delMembro('${m.id}','${m.nome}')">Excluir</button>`:''}
         ${autorizado?`<button class="action drag-button" onclick="moveMembro('${m.id}','up')">↑</button><button class="action drag-button" onclick="moveMembro('${m.id}','down')">↓</button>`:''}
+        </div>
         </div>`;
     });
     listaMembros.innerHTML=html;
@@ -380,12 +425,10 @@ function moveMembro(id,direction){
     }
     
     if(targetIndex !== -1){
-        // 1. Troca a ordem no array local
         let temp = membrosData[targetIndex];
         membrosData[targetIndex] = membrosData[index];
         membrosData[index] = temp;
         
-        // 2. Salva a nova ordem no Firestore
         const currentOrder = membrosData[index].order;
         const targetOrder = membrosData[targetIndex].order;
         
@@ -445,10 +488,10 @@ function renderPunicoes(){
             case 3: cor='red'; break;
         }
         let nomeDisplay = (m.punicao>=3)?`${m.nome} (Banido)`:m.nome;
-        html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
-        ${nomeDisplay} (${m.cargo}) → 
-        <span>${m.punicao}</span>
-        ${autorizado?`<button class="action" onclick="changeValue('${m.id}','punicao',1)">+</button><button class="action" onclick="changeValue('${m.id}','punicao',-1)">-</button>`:''}
+        html+=`<div class="member-container ${cor}">
+        <span>${nomeDisplay} (${m.cargo}) → 
+        <span>${m.punicao}</span></span>
+        ${autorizado?`<div><button class="action" onclick="changeValue('${m.id}','punicao',1)">+</button><button class="action" onclick="changeValue('${m.id}','punicao',-1)">-</button></div>`:''}
         </div>`;
     });
     listaPunicoes.innerHTML=html;
@@ -462,10 +505,10 @@ function renderPontuacao(){
         if(m.pontos<=3) cor='red';
         else if(m.pontos<=6) cor='yellow';
         else cor='green';
-        html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
-        ${m.nome} (${m.cargo}) → 
-        <span>${m.pontos}</span>
-        ${autorizado?`<button class="action" onclick="changeValue('${m.id}','pontos',1)">+</button><button class="action" onclick="changeValue('${m.id}','pontos',-1)">-</button>`:''}
+        html+=`<div class="member-container ${cor}">
+        <span>${m.nome} (${m.cargo}) → 
+        <span>${m.pontos}</span></span>
+        ${autorizado?`<div><button class="action" onclick="changeValue('${m.id}','pontos',1)">+</button><button class="action" onclick="changeValue('${m.id}','pontos',-1)">-</button></div>`:''}
         </div>`;
     });
     listaPontuacao.innerHTML=html;
@@ -503,23 +546,30 @@ function refreshCronograma(){
     db.collection("cronograma").onSnapshot(snap=>{
         let html=`
             <div class="cronograma-container">
-                <div class="cronograma-cell cronograma-header">Cronograma</div>
-                <div class="cronograma-cell cronograma-header">Ação</div>
-                <div class="cronograma-cell cronograma-header">Número</div>
-                <div class="cronograma-cell cronograma-header">Ações</div>
+                <div class="cronograma-cell cronograma-header">CRONOGRAMA</div>
+                <div class="cronograma-cell cronograma-header">AÇÃO</div>
+                <div class="cronograma-cell cronograma-header">Nº</div>
+                <div class="cronograma-cell cronograma-header">AÇÕES</div>
         `;
         snap.forEach(doc=>{
             let d=doc.data();
+            // Célula do Título (Editável)
             html+=`
-            <div class="cronograma-cell" style="background:${d.corTitulo}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','titulo',this.innerText)">${d.titulo}</span></div>
+            <div class="cronograma-cell" style="background:${d.corTitulo}">
+                <span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','titulo',this.innerText)">${d.titulo}</span>
+            </div>
             
-            <div class="cronograma-cell" style="background:${d.corAcao}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','acao',this.innerText)">${d.acao}</span></div>
+            <div class="cronograma-cell" style="background:${d.corAcao}">
+                <span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','acao',this.innerText)">${d.acao}</span>
+            </div>
             
             <div class="cronograma-cell" style="background:${d.corNumero}">
                 <input type="number" class="cronograma-input" value="${d.numero}" min="0" max="20" ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)"`:''}>
             </div>
             
-            <div class="cronograma-cell">${autorizado?`<button class="action" onclick="delCronograma('${doc.id}', '${d.titulo}')">Excluir</button>`:''}</div>
+            <div class="cronograma-cell" style="background:${d.corTitulo}">
+                ${autorizado?`<button class="action" onclick="delCronograma('${doc.id}', '${d.titulo}')">Excluir</button>`:''}
+            </div>
             `;
         });
         html+='</div>';
