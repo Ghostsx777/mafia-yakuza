@@ -512,8 +512,13 @@ function refreshCronograma(){
             let d=doc.data();
             html+=`
             <div class="cronograma-cell" style="background:${d.corTitulo}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','titulo',this.innerText)">${d.titulo}</span></div>
+            
             <div class="cronograma-cell" style="background:${d.corAcao}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','acao',this.innerText)">${d.acao}</span></div>
-            <div class="cronograma-cell" style="background:${d.corNumero}"><input type="number" class="cronograma-input" value="${d.numero}" min="0" max="20" ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)"`:''}></div>
+            
+            <div class="cronograma-cell" style="background:${d.corNumero}">
+                <input type="number" class="cronograma-input" value="${d.numero}" min="0" max="20" ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)"`:''}>
+            </div>
+            
             <div class="cronograma-cell">${autorizado?`<button class="action" onclick="delCronograma('${doc.id}', '${d.titulo}')">Excluir</button>`:''}</div>
             `;
         });
