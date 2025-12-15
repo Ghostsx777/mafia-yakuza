@@ -1,208 +1,7 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Mafia Yakuza</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-<style>
-:root{
-  --bg:#050b14;
-  --panel:#0b1625;
-  --blue:#1f6feb;
-  --blue-dark:#0a3d91;
-  --text:#ffffff;
-}
-body{
-  margin:0;
-  font-family:Arial, Helvetica, sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-header{
-  background:var(--panel);
-  padding:15px;
-  display:flex;
-  align-items:center;
-  gap:15px;
-}
-header img{height:50px;}
-nav{
-  display:flex;
-  background:#020814;
-  flex-wrap: wrap;
-}
-nav button{
-  flex:1;
-  padding:15px;
-  background:none;
-  border:none;
-  color:white;
-  cursor:pointer;
-  font-size:15px;
-}
-nav button.active,nav button:hover{
-  background:var(--blue);
-}
-section{
-  display:none;
-  padding:20px;
-}
-input, select{
-  padding:8px;
-  margin:5px;
-  border-radius:5px;
-  border:none;
-}
-button.action{
-  background:var(--blue);
-  border:none;
-  color:white;
-  padding:5px 10px;
-  cursor:pointer;
-  margin-left:5px;
-}
-button.action:hover{background:var(--blue-dark);}
-.color-picker{width:40px;height:25px;border:none;cursor:pointer;vertical-align: middle;}
-.mensagem-restrita{
-  text-align:center;
-  font-size:18px;
-  color:#c9c9c9;
-  padding:50px 0;
-  font-weight:bold;
-  border:2px dashed #555;
-  border-radius:10px;
-  background:#0b1625;
-}
-.member-container div{margin:5px 0;}
-.red{background:#9b1c1c}
-.yellow{background:#c9a227;color:black}
-.orange{background:#e67e22;color:black}
-.green{background:#137333}
-
-/* Cronograma estilo planilha */
-.cronograma-container{
-  display:grid;
-  grid-template-columns: 2fr 5fr 1fr 1fr;
-  gap:5px;
-  margin-top:10px;
-}
-.cronograma-header{
-  font-weight:bold;
-  text-align:center;
-  text-transform:uppercase;
-  background:#0b1625;
-  border:1px solid #1f2a44;
-  padding:8px;
-  border-radius:5px;
-}
-.cronograma-cell{
-  padding:8px;
-  border:1px solid #1f2a44;
-  border-radius:5px;
-  min-height:35px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  color:white;
-  transition: background 0.3s;
-}
-.cronograma-input{
-  width:100%;
-  border:none;
-  background:transparent;
-  text-align:center;
-  font-weight:bold;
-  color:white;
-}
-.drag-button{
-  cursor:pointer;
-  margin-left:5px;
-}
-</style>
-</head>
-
-<body>
-
-<header>
-  <img src="logo.png">
-  <h2>Máfia Yakuza</h2>
-</header>
-
-<nav>
-  <button onclick="show('login',this)">Login</button>
-  <button onclick="show('membros',this)">Membros</button>
-  <button onclick="show('punicoes',this)">Punições</button>
-  <button onclick="show('pontuacao',this)">Pontuação</button>
-  <button onclick="show('cargos',this)">Cargos</button>
-  <button onclick="show('cronograma',this)">Cronograma</button>
-  <button onclick="show('historico',this)">Histórico</button>
-</nav>
-
-<section id="login">
-  <h3>🔒 Permissão de edição</h3>
-  <input type="password" id="senha" placeholder="Senha">
-  <button class="action" onclick="login()">Ativar edição</button>
-</section>
-
-<section id="membros">
-  <h3>Membros</h3>
-  <div id="formMembros" style="display:none">
-    <input id="nome" placeholder="Nome">
-    <select id="cargoSelect"><option value="">Selecione cargo</option></select>
-    <button class="action" onclick="addMembro()">Adicionar Membro</button>
-  </div>
-  <div id="listaMembros" class="member-container"></div>
-</section>
-
-<section id="punicoes">
-  <h3>Punições</h3>
-  <div id="listaPunicoes" class="member-container"></div>
-</section>
-
-<section id="pontuacao">
-  <h3>Pontuação</h3>
-  <div id="listaPontuacao" class="member-container"></div>
-</section>
-
-<section id="cargos">
-  <h3>Cargos</h3>
-  <div id="formCargos" style="display:none">
-    <input id="novoCargo" placeholder="Nome do cargo">
-    <input type="color" id="corCargo" value="#1f6feb">
-    <button class="action" onclick="addCargo()">Adicionar Cargo</button>
-  </div>
-  <div id="listaCargos"></div>
-</section>
-
-<section id="cronograma">
-  <h3>Cronograma</h3>
-  <div id="formCronograma" style="display:none">
-    <input id="tituloCronograma" placeholder="Cronograma">
-    <input id="acaoCronograma" placeholder="Ação">
-    <input type="number" id="numeroCronograma" value="0" min="0" max="20">
-    <input type="color" id="corTitulo" value="#0b1625" title="Cor do Cronograma">
-    <input type="color" id="corAcao" value="#0b1625" title="Cor da Ação">
-    <input type="color" id="corNumero" value="#1f6feb" title="Cor do Número">
-    <button class="action" onclick="addCronograma()">Adicionar</button>
-  </div>
-  <div id="listaCronograma" class="cronograma-container"></div>
-</section>
-
-<section id="historico">
-  <h3>Histórico de alterações</h3>
-  <div id="listaHistorico"></div>
-</section>
-
-<script>
 const firebaseConfig={
-  apiKey:"AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",
-  authDomain:"mafia-yakuza.firebaseapp.com",
-  projectId:"mafia-yakuza"
+    apiKey:"AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",
+    authDomain:"mafia-yakuza.firebaseapp.com",
+    projectId:"mafia-yakuza"
 };
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
@@ -213,234 +12,321 @@ let membrosData=[];
 
 // Navegação
 function show(id, btn){
-  document.querySelectorAll("section").forEach(s => s.style.display = "none");
-  if(id === "historico" && !autorizado){
-    document.getElementById('historico').style.display = 'block';
-    document.getElementById('listaHistorico').innerHTML = '<div class="mensagem-restrita">Acesso restrito: apenas líderes podem visualizar esta área.</div>';
+    document.querySelectorAll("section").forEach(s => s.style.display = "none");
+    if(id === "historico"){ // Historico não precisa de login, mas o conteúdo é restrito
+        document.getElementById('historico').style.display = 'block';
+        if(autorizado) {
+            refreshHistorico();
+        } else {
+            document.getElementById('listaHistorico').innerHTML = '<div class="mensagem-restrita">Acesso restrito: apenas líderes podem visualizar esta área.</div>';
+        }
+    } else {
+        document.getElementById(id).style.display = "block";
+    }
+    
     document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    return;
-  }
-  document.getElementById(id).style.display = "block";
-  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
 }
 
 // Login
 function login(){
-  if(senha.value==="yakuzanotopo2526"){
-    autorizado=true;
-    alert("Edição ativada!");
-    document.getElementById('formMembros').style.display='block';
-    document.getElementById('formCargos').style.display='block';
-    document.getElementById('formCronograma').style.display='block';
-    refreshData();
-  }else alert("Senha incorreta");
+    // ATENÇÃO: SENHA HARDCODED NO CÓDIGO É INSEGURO!
+    if(senha.value==="yakuzanotopo2526"){
+        autorizado=true;
+        alert("Edição ativada!");
+        document.getElementById('formMembros').style.display='block';
+        document.getElementById('formCargos').style.display='block';
+        document.getElementById('formCronograma').style.display='block';
+        refreshData();
+        // Se estiver no histórico, recarrega após o login
+        if(document.getElementById('historico').style.display === 'block') refreshHistorico(); 
+    }else alert("Senha incorreta");
 }
 
 // Histórico
 function addHistorico(acao){
-  db.collection("historico").add({acao,data:new Date()});
+    db.collection("historico").add({acao, data: new Date()});
+}
+
+function refreshHistorico(){
+    if(!autorizado) return;
+    // Pega os 50 itens mais recentes
+    db.collection("historico").orderBy("data", "desc").limit(50).onSnapshot(snap=>{
+        let html='';
+        snap.forEach(doc=>{
+            let d = doc.data();
+            const dataHora = d.data.toDate().toLocaleString('pt-BR');
+            html+=`<div>**[${dataHora}]** ${d.acao}</div>`;
+        });
+        listaHistorico.innerHTML=html;
+    });
 }
 
 // Cargos
 function addCargo(){
-  if(!autorizado) return alert("Sem permissão");
-  if(!novoCargo.value) return alert("Preencha o cargo");
-  db.collection("cargos").add({nome:novoCargo.value, cor:corCargo.value})
-    .then(()=>{
-      addHistorico(`Cargo ${novoCargo.value} adicionado`);
-      novoCargo.value="";
-      refreshCargos(); 
-    });
-}
-function delCargo(id,nome){
-  if(!autorizado) return;
-  if(confirm("Remover cargo "+nome+"?")){
-    db.collection("cargos").doc(id).delete();
-    addHistorico(`Cargo ${nome} removido`);
-    refreshCargos();
-  }
-}
-function updateCargo(id,campo,valor,nome){
-  if(!autorizado) return;
-  db.collection("cargos").doc(id).update({[campo]:valor});
-  addHistorico(`Cargo ${nome} alterado: ${campo} → ${valor}`);
+    if(!autorizado) return alert("Sem permissão");
+    const nomeVal = novoCargo.value.trim();
+    if(!nomeVal) return alert("Preencha o cargo");
+    db.collection("cargos").add({nome: nomeVal, cor: corCargo.value})
+        .then(()=>{
+            addHistorico(`Cargo **${nomeVal}** adicionado`);
+            novoCargo.value="";
+            refreshCargos(); 
+        });
 }
 
-// Atualiza select de cargos
+function delCargo(id,nome){
+    if(!autorizado) return;
+    if(confirm("Remover cargo "+nome+"?")){
+        db.collection("cargos").doc(id).delete();
+        addHistorico(`Cargo **${nome}** removido`);
+        refreshCargos();
+    }
+}
+
+function updateCargo(id,campo,valor,nome){
+    if(!autorizado) return;
+    db.collection("cargos").doc(id).update({[campo]:valor});
+    addHistorico(`Cargo **${nome}** alterado: ${campo} → ${valor}`);
+}
+
+// Atualiza select de cargos e lista
 function refreshCargos(){
-  db.collection("cargos").onSnapshot(snap=>{
-    cargosMap={};
-    let options='<option value="">Selecione cargo</option>';
-    let htmlCargos='';
-    snap.forEach(doc=>{
-      let d=doc.data();
-      cargosMap[d.nome]=d.cor;
-      options+=`<option value="${d.nome}">${d.nome}</option>`;
-      htmlCargos+=autorizado? `<div><span contenteditable="true" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span> <input type="color" class="color-picker" value="${d.cor}" onchange="updateCargo('${doc.id}','cor',this.value,'${d.nome}')"> <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button></div>` : `<div>${d.nome} <div style="display:inline-block;width:20px;height:20px;background:${d.cor};margin-left:5px;"></div></div>`;
+    db.collection("cargos").onSnapshot(snap=>{
+        cargosMap={};
+        let options='<option value="">Selecione cargo</option>';
+        let htmlCargos='';
+        snap.forEach(doc=>{
+            let d=doc.data();
+            cargosMap[d.nome]=d.cor;
+            options+=`<option value="${d.nome}">${d.nome}</option>`;
+            htmlCargos+=autorizado? `<div><span contenteditable="true" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span> <input type="color" class="color-picker" value="${d.cor}" onchange="updateCargo('${doc.id}','cor',this.value,'${d.nome}')"> <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button></div>` : `<div>${d.nome} <div style="display:inline-block;width:20px;height:20px;background:${d.cor};margin-left:5px;"></div></div>`;
+        });
+        cargoSelect.innerHTML=options;
+        listaCargos.innerHTML=htmlCargos;
     });
-    cargoSelect.innerHTML=options;
-    listaCargos.innerHTML=htmlCargos;
-  });
 }
 
 // Adicionar Membro
 function addMembro() {
-  if (!autorizado) return alert("Sem permissão");
+    if (!autorizado) return alert("Sem permissão");
 
-  const nomeVal = document.getElementById("nome").value.trim();
-  const cargoVal = document.getElementById("cargoSelect").value;
+    const nomeVal = document.getElementById("nome").value.trim();
+    const cargoVal = document.getElementById("cargoSelect").value;
 
-  if(!nomeVal) return alert("Digite o nome do membro");
-  if(!cargoVal) return alert("Selecione o cargo");
+    if(!nomeVal) return alert("Digite o nome do membro");
+    if(!cargoVal) return alert("Selecione o cargo");
+    
+    // Define um valor de 'order' que será o tamanho atual da lista + 1
+    const newOrder = membrosData.length > 0 ? membrosData[membrosData.length - 1].order + 1 : 0;
 
-  db.collection("membros").add({nome: nomeVal, cargo: cargoVal, punicao:0, pontos:0})
-    .then(()=>{document.getElementById("nome").value=""; document.getElementById("cargoSelect").value=""; addHistorico(`Membro ${nomeVal} adicionado com cargo ${cargoVal}`)});
-}
-
-// Cronograma
-function addCronograma(){
-  if(!autorizado) return alert("Sem permissão");
-  let titulo = tituloCronograma.value.trim();
-  let acao = acaoCronograma.value.trim();
-  let numero = Number(numeroCronograma.value);
-  let corT = corTitulo.value;
-  let corA = corAcao.value;
-  let corN = corNumero.value;
-  if(!titulo || !acao) return alert("Preencha cronograma e ação");
-  db.collection("cronograma").add({titulo,acao,numero,corTitulo:corT,corAcao:corA,corNumero:corN})
-    .then(()=>addHistorico(`Cronograma adicionado: ${titulo} | ${acao} | ${numero}`));
-}
-
-function delCronograma(id){
-  if(!autorizado) return;
-  if(confirm("Remover esta entrada do cronograma?")){
-    db.collection("cronograma").doc(id).delete();
-    addHistorico(`Cronograma ${id} removido`);
-  }
-}
-
-function updateCronograma(id,campo,valor){
-  if(!autorizado) return;
-  db.collection("cronograma").doc(id).update({[campo]:valor});
-  addHistorico(`Cronograma atualizado: ${id} → ${campo} = ${valor}`);
+    db.collection("membros").add({
+        nome: nomeVal, 
+        cargo: cargoVal, 
+        punicao: 0, 
+        pontos: 0,
+        order: newOrder // Novo campo para ordenação
+    })
+    .then(()=>{
+        document.getElementById("nome").value=""; 
+        document.getElementById("cargoSelect").value=""; 
+        addHistorico(`Membro **${nomeVal}** adicionado com cargo **${cargoVal}**`);
+    });
 }
 
 // Atualiza todos os dados
 function refreshData(){
-  refreshCargos();
-  refreshCronograma();
-  refreshMembros();
+    refreshCargos();
+    refreshCronograma();
+    refreshMembros();
 }
 
 function refreshMembros(){
-  db.collection("membros").onSnapshot(snap=>{
-    membrosData=[];
-    snap.forEach(doc=>{
-      membrosData.push({id:doc.id,...doc.data()});
+    // Adicionado orderBy('order') para garantir a ordem persistente
+    db.collection("membros").orderBy("order").onSnapshot(snap=>{
+        membrosData=[];
+        snap.forEach(doc=>{
+            membrosData.push({id:doc.id,...doc.data()});
+        });
+        renderMembros();
+        renderPunicoes();
+        renderPontuacao();
     });
-    renderMembros();
-    renderPunicoes();
-    renderPontuacao();
-  });
 }
 
 function renderMembros(){
-  let html='';
-  membrosData.forEach((m,i)=>{
-    let cor = cargosMap[m.cargo]||'#0b1625';
-    html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
-      <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','nome',this.innerText)">${m.nome}</span> - 
-      <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','cargo',this.innerText)">${m.cargo}</span>
-      ${autorizado?`<button class="action" onclick="delMembro('${m.id}')">Excluir</button>`:''}
-      ${autorizado?`<button class="action drag-button" onclick="moveMembro('${m.id}','up')">↑</button><button class="action drag-button" onclick="moveMembro('${m.id}','down')">↓</button>`:''}
-      </div>`;
-  });
-  listaMembros.innerHTML=html;
+    let html='';
+    membrosData.forEach((m)=>{
+        let cor = cargosMap[m.cargo]||'#0b1625';
+        html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
+        <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','nome',this.innerText)">${m.nome}</span> - 
+        <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','cargo',this.innerText)">${m.cargo}</span>
+        ${autorizado?`<button class="action" onclick="delMembro('${m.id}','${m.nome}')">Excluir</button>`:''}
+        ${autorizado?`<button class="action drag-button" onclick="moveMembro('${m.id}','up')">↑</button><button class="action drag-button" onclick="moveMembro('${m.id}','down')">↓</button>`:''}
+        </div>`;
+    });
+    listaMembros.innerHTML=html;
 }
 
 function moveMembro(id,direction){
-  let index = membrosData.findIndex(m=>m.id===id);
-  if(direction==='up' && index>0){
-    let temp = membrosData[index-1];
-    membrosData[index-1]=membrosData[index];
-    membrosData[index]=temp;
-  } else if(direction==='down' && index<membrosData.length-1){
-    let temp = membrosData[index+1];
-    membrosData[index+1]=membrosData[index];
-    membrosData[index]=temp;
-  }
-  renderMembros();
+    if(!autorizado) return;
+    let index = membrosData.findIndex(m=>m.id===id);
+    if(index === -1) return;
+
+    let targetIndex = -1;
+    
+    if(direction==='up' && index>0){
+        targetIndex = index - 1;
+    } else if(direction==='down' && index<membrosData.length-1){
+        targetIndex = index + 1;
+    }
+    
+    if(targetIndex !== -1){
+        // 1. Troca a ordem no array local para renderização imediata
+        let temp = membrosData[targetIndex];
+        membrosData[targetIndex] = membrosData[index];
+        membrosData[index] = temp;
+        
+        // 2. Atualiza a ordem no Firestore
+        const currentOrder = membrosData[index].order;
+        const targetOrder = membrosData[targetIndex].order;
+        
+        // Aplica a nova ordem no Firestore (garantindo que os dados sejam salvos)
+        db.collection('membros').doc(membrosData[index].id).update({order: targetOrder});
+        db.collection('membros').doc(membrosData[targetIndex].id).update({order: currentOrder});
+        
+        addHistorico(`Ordem do membro **${membrosData[index].nome}** alterada.`);
+    }
+    // Re-renderiza localmente para feedback imediato (será sobreposto pelo onSnapshot)
+    renderMembros();
 }
 
-function delMembro(id){
-  if(confirm("Excluir membro?")) db.collection("membros").doc(id).delete();
+function delMembro(id, nome){
+    if(!autorizado) return;
+    if(confirm(`Excluir membro ${nome}?`)){
+        db.collection("membros").doc(id).delete();
+        addHistorico(`Membro **${nome}** excluído.`);
+    }
 }
 
 function updateCampo(collection,id,campo,valor){
-  if(!autorizado) return;
-  db.collection(collection).doc(id).update({[campo]:valor});
-  addHistorico(`${collection} atualizado: ${campo} → ${valor}`);
+    if(!autorizado) return;
+    let val = isNaN(valor) || valor === '' ? valor : Number(valor);
+    db.collection(collection).doc(id).update({[campo]:val});
+    addHistorico(`Membro/Dados atualizados em **${collection}**: ${campo} → **${valor}**`);
+}
+
+// Função para alterar pontos e punições via botões
+function changeValue(id, campo, delta){
+    if(!autorizado) return;
+    let membro = membrosData.find(m=>m.id===id);
+    if(!membro) return;
+    let novo = membro[campo]+delta;
+    
+    let acaoHistorico = '';
+    
+    if(campo==='punicao'){
+        novo=Math.max(0,Math.min(3,novo));
+        acaoHistorico = novo > membro.punicao ? 'punição adicionada' : 'punição removida';
+    } else if(campo==='pontos'){
+        novo=Math.max(0,Math.min(10,novo));
+        acaoHistorico = novo > membro.pontos ? 'pontos adicionados' : 'pontos removidos';
+    }
+    
+    updateCampo('membros',id,campo,novo);
+    addHistorico(`${membro.nome}: ${acaoHistorico}. Novo valor de ${campo}: **${novo}**`);
 }
 
 // Punicoes
 function renderPunicoes(){
-  let html='';
-  membrosData.forEach(m=>{
-    let cor='';
-    switch(m.punicao){
-      case 0: cor='green'; break;
-      case 1: cor='yellow'; break;
-      case 2: cor='orange'; break;
-      case 3: cor='red'; break;
-    }
-    let nomeDisplay = (m.punicao>=3)?`${m.nome} (Banido)`:m.nome;
-    html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
-      ${nomeDisplay} (${m.cargo}) → 
-      <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','punicao',this.innerText)">${m.punicao}</span>
-    </div>`;
-  });
-  listaPunicoes.innerHTML=html;
+    let html='';
+    membrosData.forEach(m=>{
+        let cor='';
+        switch(m.punicao){
+            case 0: cor='green'; break;
+            case 1: cor='yellow'; break;
+            case 2: cor='orange'; break;
+            case 3: cor='red'; break;
+        }
+        let nomeDisplay = (m.punicao>=3)?`${m.nome} (Banido)`:m.nome;
+        html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
+        ${nomeDisplay} (${m.cargo}) → 
+        <span>${m.punicao}</span>
+        ${autorizado?`<button class="action" onclick="changeValue('${m.id}','punicao',1)">+</button><button class="action" onclick="changeValue('${m.id}','punicao',-1)">-</button>`:''}
+        </div>`;
+    });
+    listaPunicoes.innerHTML=html;
 }
 
 // Pontuação
 function renderPontuacao(){
-  let html='';
-  membrosData.forEach(m=>{
-    let cor='';
-    if(m.pontos<=3) cor='red';
-    else if(m.pontos<=6) cor='yellow';
-    else cor='green';
-    html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
-      ${m.nome} (${m.cargo}) → 
-      <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','pontos',this.innerText)">${m.pontos}</span>
-    </div>`;
-  });
-  listaPontuacao.innerHTML=html;
+    let html='';
+    membrosData.forEach(m=>{
+        let cor='';
+        if(m.pontos<=3) cor='red';
+        else if(m.pontos<=6) cor='yellow';
+        else cor='green';
+        html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
+        ${m.nome} (${m.cargo}) → 
+        <span>${m.pontos}</span>
+        ${autorizado?`<button class="action" onclick="changeValue('${m.id}','pontos',1)">+</button><button class="action" onclick="changeValue('${m.id}','pontos',-1)">-</button>`:''}
+        </div>`;
+    });
+    listaPontuacao.innerHTML=html;
 }
 
 // Cronograma
-function refreshCronograma(){
-  db.collection("cronograma").onSnapshot(snap=>{
-    let html='<div class="cronograma-container"><div class="cronograma-cell cronograma-header">Cronograma</div><div class="cronograma-cell cronograma-header">Ação</div><div class="cronograma-cell cronograma-header">Número</div><div class="cronograma-cell cronograma-header">Ações</div>';
-    snap.forEach(doc=>{
-      let d=doc.data();
-      html+=`
-      <div class="cronograma-cell" style="background:${d.corTitulo}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','titulo',this.innerText)">${d.titulo}</span></div>
-      <div class="cronograma-cell" style="background:${d.corAcao}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','acao',this.innerText)">${d.acao}</span></div>
-      <div class="cronograma-cell" style="background:${d.corNumero}"><input type="number" class="cronograma-input" value="${d.numero}" ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)"`:"disabled"}></div>
-      <div class="cronograma-cell">${autorizado?`<button class="action" onclick="delCronograma('${doc.id}')">Excluir</button>`:''}</div>
-      `;
-    });
-    html+='</div>';
-    listaCronograma.innerHTML=html;
-  });
+function addCronograma(){
+    if(!autorizado) return alert("Sem permissão");
+    let titulo = tituloCronograma.value.trim();
+    let acao = acaoCronograma.value.trim();
+    let numero = Number(numeroCronograma.value);
+    let corT = corTitulo.value;
+    let corA = corAcao.value;
+    let corN = corNumero.value;
+    if(!titulo || !acao) return alert("Preencha cronograma e ação");
+    db.collection("cronograma").add({titulo,acao,numero,corTitulo:corT,corAcao:corA,corNumero:corN})
+        .then(()=>addHistorico(`Cronograma adicionado: **${titulo} | ${acao} | ${numero}**`));
 }
 
-refreshData();
-show("membros",document.querySelector("nav button"));
-</script>
+function delCronograma(id, titulo){
+    if(!autorizado) return;
+    if(confirm("Remover esta entrada do cronograma?")){
+        db.collection("cronograma").doc(id).delete();
+        addHistorico(`Cronograma **${titulo}** removido`);
+    }
+}
 
-</body>
-</html>
+function updateCronograma(id,campo,valor){
+    if(!autorizado) return;
+    db.collection("cronograma").doc(id).update({[campo]:valor});
+    addHistorico(`Cronograma atualizado: ${campo} → **${valor}**`);
+}
+
+function refreshCronograma(){
+    db.collection("cronograma").onSnapshot(snap=>{
+        // Adiciona o cabeçalho fora do loop de dados
+        let html=`
+            <div class="cronograma-container">
+                <div class="cronograma-cell cronograma-header">Cronograma</div>
+                <div class="cronograma-cell cronograma-header">Ação</div>
+                <div class="cronograma-cell cronograma-header">Número</div>
+                <div class="cronograma-cell cronograma-header">Ações</div>
+        `;
+        snap.forEach(doc=>{
+            let d=doc.data();
+            html+=`
+            <div class="cronograma-cell" style="background:${d.corTitulo}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','titulo',this.innerText)">${d.titulo}</span></div>
+            <div class="cronograma-cell" style="background:${d.corAcao}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','acao',this.innerText)">${d.acao}</span></div>
+            <div class="cronograma-cell" style="background:${d.corNumero}"><input type="number" class="cronograma-input" value="${d.numero}" min="0" max="20" ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)"`:''}></div>
+            <div class="cronograma-cell">${autorizado?`<button class="action" onclick="delCronograma('${doc.id}', '${d.titulo}')">Excluir</button>`:''}</div>
+            `;
+        });
+        html+='</div>';
+        listaCronograma.innerHTML=html;
+    });
+}
+
+// Inicial
+show("login",document.querySelector("nav button"));
+refreshData();
