@@ -170,7 +170,6 @@ button.action:hover{
   <div id="formMembros" style="display:none">
     <input id="nome" placeholder="Nome">
     <select id="cargoSelect"><option value="">Selecione cargo</option></select>
-    <input type="number" id="ordemMembro" placeholder="Ordem">
     <button class="action" onclick="addMembro()">Adicionar Membro</button>
   </div>
   <div id="listaMembros"></div>
@@ -267,7 +266,7 @@ function addCargo(){
     .then(()=>{
       addHistorico(`Cargo ${novoCargo.value} adicionado`);
       novoCargo.value="";
-      refreshCargos(); // Atualiza select imediatamente
+      refreshCargos(); 
     });
 }
 function delCargo(id,nome){
