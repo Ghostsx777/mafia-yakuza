@@ -16,118 +16,33 @@
   --blue-dark:#0a3d91;
   --text:#ffffff;
 }
-body{
-  margin:0;
-  font-family:Arial, Helvetica, sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-header{
-  background:var(--panel);
-  padding:15px;
-  display:flex;
-  align-items:center;
-  gap:15px;
-}
+body{margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--bg);color:var(--text);}
+header{background:var(--panel);padding:15px;display:flex;align-items:center;gap:15px;}
 header img{height:50px;}
-nav{
-  display:flex;
-  background:#020814;
-  flex-wrap: wrap;
-}
-nav button{
-  flex:1;
-  padding:15px;
-  background:none;
-  border:none;
-  color:white;
-  cursor:pointer;
-  font-size:15px;
-}
-nav button.active,nav button:hover{
-  background:var(--blue);
-}
-section{
-  display:none;
-  padding:20px;
-}
-input, select{
-  padding:8px;
-  margin:5px;
-  border-radius:5px;
-  border:none;
-}
-button.action{
-  background:var(--blue);
-  border:none;
-  color:white;
-  padding:5px 10px;
-  cursor:pointer;
-  margin-left:5px;
-}
+nav{display:flex;background:#020814;flex-wrap:wrap;}
+nav button{flex:1;padding:15px;background:none;border:none;color:white;cursor:pointer;font-size:15px;}
+nav button.active,nav button:hover{background:var(--blue);}
+section{display:none;padding:20px;}
+input, select{padding:8px;margin:5px;border-radius:5px;border:none;}
+button.action{background:var(--blue);border:none;color:white;padding:5px 10px;cursor:pointer;margin-left:5px;}
 button.action:hover{background:var(--blue-dark);}
 .color-picker{width:40px;height:25px;border:none;cursor:pointer;vertical-align: middle;}
-.mensagem-restrita{
-  text-align:center;
-  font-size:18px;
-  color:#c9c9c9;
-  padding:50px 0;
-  font-weight:bold;
-  border:2px dashed #555;
-  border-radius:10px;
-  background:#0b1625;
-}
+.mensagem-restrita{text-align:center;font-size:18px;color:#c9c9c9;padding:50px 0;font-weight:bold;border:2px dashed #555;border-radius:10px;background:#0b1625;}
 .member-container div{margin:5px 0;}
 .red{background:#9b1c1c}
 .yellow{background:#c9a227;color:black}
 .orange{background:#e67e22;color:black}
 .green{background:#137333}
-
 /* Cronograma estilo planilha */
-.cronograma-container{
-  display:grid;
-  grid-template-columns: 2fr 5fr 1fr 1fr;
-  gap:5px;
-  margin-top:10px;
-}
-.cronograma-header{
-  font-weight:bold;
-  text-align:center;
-  text-transform:uppercase;
-  background:#0b1625;
-  border:1px solid #1f2a44;
-  padding:8px;
-  border-radius:5px;
-}
-.cronograma-cell{
-  padding:8px;
-  border:1px solid #1f2a44;
-  border-radius:5px;
-  min-height:35px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  color:white;
-  transition: background 0.3s;
-}
-.cronograma-input{
-  width:100%;
-  border:none;
-  background:transparent;
-  text-align:center;
-  font-weight:bold;
-  color:white;
-}
-.drag-button{
-  cursor:pointer;
-  margin-left:5px;
-}
+.cronograma-container{display:grid;grid-template-columns:2fr 5fr 1fr 1fr;gap:5px;margin-top:10px;}
+.cronograma-header{font-weight:bold;text-align:center;text-transform:uppercase;background:#0b1625;border:1px solid #1f2a44;padding:8px;border-radius:5px;}
+.cronograma-cell{padding:8px;border:1px solid #1f2a44;border-radius:5px;min-height:35px;display:flex;align-items:center;justify-content:center;font-weight:bold;color:white;transition: background 0.3s;}
+.cronograma-input{width:100%;border:none;background:transparent;text-align:center;font-weight:bold;color:white;}
+.drag-button{cursor:pointer;margin-left:5px;}
 </style>
 </head>
 
 <body>
-
 <header>
   <img src="logo.png">
   <h2>Máfia Yakuza</h2>
@@ -199,11 +114,7 @@ button.action:hover{background:var(--blue-dark);}
 </section>
 
 <script>
-const firebaseConfig={
-  apiKey:"AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",
-  authDomain:"mafia-yakuza.firebaseapp.com",
-  projectId:"mafia-yakuza"
-};
+const firebaseConfig={apiKey:"AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",authDomain:"mafia-yakuza.firebaseapp.com",projectId:"mafia-yakuza"};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
@@ -214,7 +125,7 @@ let membrosData=[];
 // Navegação
 function show(id, btn){
   document.querySelectorAll("section").forEach(s => s.style.display = "none");
-  if(id === "historico" && !autorizado){
+  if(id==='historico' && !autorizado){
     document.getElementById('historico').style.display = 'block';
     document.getElementById('listaHistorico').innerHTML = '<div class="mensagem-restrita">Acesso restrito: apenas líderes podem visualizar esta área.</div>';
     document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
@@ -224,6 +135,7 @@ function show(id, btn){
   document.getElementById(id).style.display = "block";
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
+  if(id==='historico' && autorizado) refreshHistorico();
 }
 
 // Login
@@ -242,8 +154,18 @@ function login(){
 function addHistorico(acao){
   db.collection("historico").add({acao,data:new Date()});
 }
+function refreshHistorico(){
+  db.collection("historico").orderBy("data","desc").limit(100).onSnapshot(snap=>{
+    let html="";
+    snap.forEach(doc=>{
+      let d=doc.data();
+      html+=`<div>${new Date(d.data.seconds*1000).toLocaleString()} → ${d.acao}</div>`;
+    });
+    listaHistorico.innerHTML = html;
+  });
+}
 
-// Cargos
+// --- Funções Cargos ---
 function addCargo(){
   if(!autorizado) return alert("Sem permissão");
   if(!novoCargo.value) return alert("Preencha o cargo");
@@ -267,8 +189,6 @@ function updateCargo(id,campo,valor,nome){
   db.collection("cargos").doc(id).update({[campo]:valor});
   addHistorico(`Cargo ${nome} alterado: ${campo} → ${valor}`);
 }
-
-// Atualiza select de cargos
 function refreshCargos(){
   db.collection("cargos").onSnapshot(snap=>{
     cargosMap={};
@@ -285,107 +205,46 @@ function refreshCargos(){
   });
 }
 
-// Adicionar Membro
+// --- Funções Membros ---
 function addMembro() {
   if (!autorizado) return alert("Sem permissão");
-
   const nomeVal = document.getElementById("nome").value.trim();
   const cargoVal = document.getElementById("cargoSelect").value;
-
   if(!nomeVal) return alert("Digite o nome do membro");
   if(!cargoVal) return alert("Selecione o cargo");
-
-  db.collection("membros").add({nome: nomeVal, cargo: cargoVal, punicao:0, pontos:0})
-    .then(()=>{document.getElementById("nome").value=""; document.getElementById("cargoSelect").value=""; addHistorico(`Membro ${nomeVal} adicionado com cargo ${cargoVal}`)});
-}
-
-// Cronograma
-function addCronograma(){
-  if(!autorizado) return alert("Sem permissão");
-  let titulo = tituloCronograma.value.trim();
-  let acao = acaoCronograma.value.trim();
-  let numero = Number(numeroCronograma.value);
-  let corT = corTitulo.value;
-  let corA = corAcao.value;
-  let corN = corNumero.value;
-  if(!titulo || !acao) return alert("Preencha cronograma e ação");
-  db.collection("cronograma").add({titulo,acao,numero,corTitulo:corT,corAcao:corA,corNumero:corN})
-    .then(()=>addHistorico(`Cronograma adicionado: ${titulo} | ${acao} | ${numero}`));
-}
-
-function delCronograma(id){
-  if(!autorizado) return;
-  if(confirm("Remover esta entrada do cronograma?")){
-    db.collection("cronograma").doc(id).delete();
-    addHistorico(`Cronograma ${id} removido`);
-  }
-}
-
-function updateCronograma(id,campo,valor){
-  if(!autorizado) return;
-  db.collection("cronograma").doc(id).update({[campo]:valor});
-  addHistorico(`Cronograma atualizado: ${id} → ${campo} = ${valor}`);
-}
-
-// Atualiza todos os dados
-function refreshData(){
-  refreshCargos();
-  refreshCronograma();
-  refreshMembros();
-}
-
-function refreshMembros(){
-  db.collection("membros").onSnapshot(snap=>{
-    membrosData=[];
-    snap.forEach(doc=>{
-      membrosData.push({id:doc.id,...doc.data()});
+  db.collection("membros").add({nome: nomeVal, cargo: cargoVal, punicao:0, pontos:0, order:membrosData.length})
+    .then(()=>{
+      document.getElementById("nome").value="";
+      document.getElementById("cargoSelect").value="";
+      addHistorico(`Membro ${nomeVal} adicionado com cargo ${cargoVal}`);
     });
-    renderMembros();
-    renderPunicoes();
-    renderPontuacao();
-  });
 }
-
-function renderMembros(){
-  let html='';
-  membrosData.forEach((m,i)=>{
-    let cor = cargosMap[m.cargo]||'#0b1625';
-    html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
-      <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','nome',this.innerText)">${m.nome}</span> - 
-      <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','cargo',this.innerText)">${m.cargo}</span>
-      ${autorizado?`<button class="action" onclick="delMembro('${m.id}')">Excluir</button>`:''}
-      ${autorizado?`<button class="action drag-button" onclick="moveMembro('${m.id}','up')">↑</button><button class="action drag-button" onclick="moveMembro('${m.id}','down')">↓</button>`:''}
-      </div>`;
-  });
-  listaMembros.innerHTML=html;
-}
-
 function moveMembro(id,direction){
   let index = membrosData.findIndex(m=>m.id===id);
   if(direction==='up' && index>0){
-    let temp = membrosData[index-1];
-    membrosData[index-1]=membrosData[index];
-    membrosData[index]=temp;
+    let temp = membrosData[index-1].order;
+    membrosData[index-1].order = membrosData[index].order;
+    membrosData[index].order = temp;
   } else if(direction==='down' && index<membrosData.length-1){
-    let temp = membrosData[index+1];
-    membrosData[index+1]=membrosData[index];
-    membrosData[index]=temp;
+    let temp = membrosData[index+1].order;
+    membrosData[index+1].order = membrosData[index].order;
+    membrosData[index].order = temp;
   }
-  renderMembros();
+  membrosData.forEach(m=>db.collection('membros').doc(m.id).update({order:m.order}));
 }
-
-function delMembro(id){
-  if(confirm("Excluir membro?")) db.collection("membros").doc(id).delete();
+function delMembro(id,nome){
+  if(!autorizado) return;
+  if(confirm("Excluir membro "+nome+"?")){
+    db.collection("membros").doc(id).delete();
+    addHistorico(`Membro ${nome} removido`);
+  }
 }
-
 function updateCampo(collection,id,campo,valor){
   if(!autorizado) return;
   let val = isNaN(valor)?valor:Number(valor);
   db.collection(collection).doc(id).update({[campo]:val});
   addHistorico(`${collection} atualizado: ${campo} → ${valor}`);
 }
-
-// Função para alterar pontos e punições via botões
 function changeValue(id, campo, delta){
   if(!autorizado) return;
   let membro = membrosData.find(m=>m.id===id);
@@ -396,7 +255,36 @@ function changeValue(id, campo, delta){
   updateCampo('membros',id,campo,novo);
 }
 
-// Punicoes
+// --- Renderizações ---
+function refreshData(){
+  refreshCargos();
+  refreshMembros();
+  refreshCronograma();
+}
+function refreshMembros(){
+  db.collection("membros").orderBy('order').onSnapshot(snap=>{
+    membrosData=[];
+    snap.forEach(doc=>{
+      membrosData.push({id:doc.id,...doc.data()});
+    });
+    renderMembros();
+    renderPunicoes();
+    renderPontuacao();
+  });
+}
+function renderMembros(){
+  let html='';
+  membrosData.forEach((m,i)=>{
+    let cor = cargosMap[m.cargo]||'#0b1625';
+    html+=`<div style="background:${cor};padding:5px;border-radius:5px;">
+      <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','nome',this.innerText)">${m.nome}</span> - 
+      <span contenteditable="${autorizado}" onblur="updateCampo('membros','${m.id}','cargo',this.innerText)">${m.cargo}</span>
+      ${autorizado?`<button class="action" onclick="delMembro('${m.id}','${m.nome}')">Excluir</button>`:''}
+      ${autorizado?`<button class="action drag-button" onclick="moveMembro('${m.id}','up')">↑</button><button class="action drag-button" onclick="moveMembro('${m.id}','down')">↓</button>`:''}
+      </div>`;
+  });
+  listaMembros.innerHTML=html;
+}
 function renderPunicoes(){
   let html='';
   membrosData.forEach(m=>{
@@ -416,8 +304,6 @@ function renderPunicoes(){
   });
   listaPunicoes.innerHTML=html;
 }
-
-// Pontuação
 function renderPontuacao(){
   let html='';
   membrosData.forEach(m=>{
@@ -434,28 +320,41 @@ function renderPontuacao(){
   listaPontuacao.innerHTML=html;
 }
 
-// Cronograma
+// --- Cronograma ---
+function addCronograma(){
+  if(!autorizado) return alert("Sem permissão");
+  let titulo = tituloCronograma.value.trim();
+  let acao = acaoCronograma.value.trim();
+  let numero = Number(numeroCronograma.value);
+  let corT = corTitulo.value;
+  let corA = corAcao.value;
+  let corN = corNumero.value;
+  if(!titulo || !acao) return alert("Preencha cronograma e ação");
+  db.collection("cronograma").add({titulo,acao,numero,corTitulo:corT,corAcao:corA,corNumero:corN})
+    .then(()=>addHistorico(`Cronograma adicionado: ${titulo} | ${acao} | ${numero}`));
+}
+function delCronograma(id,titulo){
+  if(!autorizado) return;
+  if(confirm("Remover cronograma "+titulo+"?")){
+    db.collection("cronograma").doc(id).delete();
+    addHistorico(`Cronograma "${titulo}" removido`);
+  }
+}
 function refreshCronograma(){
   db.collection("cronograma").onSnapshot(snap=>{
-    let html='<div class="cronograma-container"><div class="cronograma-cell cronograma-header">Cronograma</div><div class="cronograma-cell cronograma-header">Ação</div><div class="cronograma-cell cronograma-header">Número</div><div class="cronograma-cell cronograma-header">Ações</div>';
+    let html='';
     snap.forEach(doc=>{
       let d=doc.data();
-      html+=`
-      <div class="cronograma-cell" style="background:${d.corTitulo}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','titulo',this.innerText)">${d.titulo}</span></div>
-      <div class="cronograma-cell" style="background:${d.corAcao}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','acao',this.innerText)">${d.acao}</span></div>
-      <div class="cronograma-cell" style="background:${d.corNumero}"><input type="number" class="cronograma-input" value="${d.numero}" min="0" max="20" ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)"`:''}></div>
-      <div class="cronograma-cell">${autorizado?`<button class="action" onclick="delCronograma('${doc.id}')">Excluir</button>`:''}</div>
-      `;
+      html+=`<div class="cronograma-cell" style="background:${d.corTitulo}">${d.titulo}</div>
+             <div class="cronograma-cell" style="background:${d.corAcao}">${d.acao}</div>
+             <div class="cronograma-cell" style="background:${d.corNumero}">${d.numero}</div>
+             <div>${autorizado?`<button class="action" onclick="delCronograma('${doc.id}','${d.titulo}')">Excluir</button>`:''}</div>`;
     });
-    html+='</div>';
     listaCronograma.innerHTML=html;
   });
 }
 
-// Inicial
 show("login",document.querySelector("nav button"));
-refreshData();
 </script>
-
 </body>
 </html>
