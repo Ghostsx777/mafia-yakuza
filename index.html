@@ -196,10 +196,10 @@ button.action:hover{
 <section id="cronograma">
   <h3>Cronograma</h3>
   <div id="formCronograma" style="display:none">
-    <input id="tituloCronograma" placeholder="Título da ação">
+    <input id="tituloCronograma" placeholder="Cronograma">
     <input id="acaoCronograma" placeholder="Ação">
     <input type="number" id="numeroCronograma" value="0" min="0" max="20">
-    <input type="color" id="corTitulo" value="#0b1625" title="Cor do Título">
+    <input type="color" id="corTitulo" value="#0b1625" title="Cor do Cronograma">
     <input type="color" id="corAcao" value="#0b1625" title="Cor da Ação">
     <input type="color" id="corNumero" value="#1f6feb" title="Cor do Número">
     <button class="action" onclick="addCronograma()">Adicionar</button>
@@ -271,5 +271,115 @@ function addMembro(){
   if(!autorizado) return alert("Sem permissão");
   let nomeVal = nome.value;
   let cargoVal = cargoSelect.value;
-  let ordemVal = Number(ordemM
+  let ordemVal = Number(ordemMembro.value)||0;
+  if(!nomeVal || !cargoVal) return alert("Preencha nome e selecione cargo");
+  db.collection("membros").add({nome:nomeVal,cargo:cargoVal,punicao:0,pontos:0,ordem:ordemVal})
+    .then(()=>addHistorico(`Membro ${nomeVal} adicionado`));
+}
+function delMembro(id,nome){ if(!autorizado) return; if(confirm("Excluir membro "+nome+"?")){ db.collection("membros").doc(id).delete(); addHistorico(`Membro ${nome} removido`);} }
+function updateMembro(id,campo,valor,nome){ if(!autorizado) return; let valorFinal = campo==="punicao"||campo==="pontos"||campo==="ordem"?Number(valor)||0:valor; db.collection("membros").doc(id).update({[campo]:valorFinal}); addHistorico(`Membro ${nome} alterou ${campo} → ${valorFinal}`); }
 
+// Punições
+function punicaoClass(p){
+  if(p<=0) return 'punicao0';
+  if(p===1) return 'punicao1';
+  if(p===2) return 'punicao2';
+  return 'punicao3';
+}
+function colorPontuacao(p){
+  if(p>=0 && p<=3) return "red";
+  if(p>=4 && p<=6) return "yellow";
+  if(p>=7) return "green";
+  return "red";
+}
+
+// Cronograma
+function addCronograma(){
+  if(!autorizado) return alert("Sem permissão");
+  let titulo = tituloCronograma.value.trim();
+  let acao = acaoCronograma.value.trim();
+  let numero = Number(numeroCronograma.value);
+  let corT = corTitulo.value;
+  let corA = corAcao.value;
+  let corN = corNumero.value;
+  if(!titulo || !acao) return alert("Preencha cronograma e ação");
+  db.collection("cronograma").add({titulo,acao,numero,corTitulo:corT,corAcao:corA,corNumero:corN})
+    .then(()=>addHistorico(`Cronograma adicionado: ${titulo} | ${acao} | ${numero}`));
+}
+function delCronograma(id,titulo){
+  if(!autorizado) return;
+  if(confirm("Remover cronograma: "+titulo+"?")) db.collection("cronograma").doc(id).delete();
+}
+function updateCronograma(id,campo,valor){
+  if(!autorizado) return;
+  db.collection("cronograma").doc(id).update({[campo]:valor});
+  addHistorico(`Cronograma atualizado: ${id} → ${campo} = ${valor}`);
+}
+
+// Atualizar visualizações
+function refreshData(){
+  // Cargos
+  db.collection("cargos").onSnapshot(snap=>{
+    cargosMap={};
+    let options='<option value="">Selecione cargo</option>';
+    let htmlCargos='';
+    snap.forEach(doc=>{
+      let d=doc.data();
+      cargosMap[d.nome]=d.cor;
+      options+=`<option value="${d.nome}">${d.nome}</option>`;
+      htmlCargos+=autorizado? `<div><span contenteditable="true" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span> <input type="color" class="color-picker" value="${d.cor}" onchange="updateCargo('${doc.id}','cor',this.value,'${d.nome}')"> <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button></div>` : `<div>${d.nome} <div style="display:inline-block;width:20px;height:20px;background:${d.cor};margin-left:5px;"></div></div>`;
+    });
+    cargoSelect.innerHTML=options;
+    listaCargos.innerHTML=htmlCargos;
+  });
+
+  // Membros
+  db.collection("membros").orderBy("ordem","asc").onSnapshot(snap=>{
+    let html='',pun='',pt='';
+    snap.forEach(doc=>{
+      let d=doc.data();
+      let bg=cargosMap[d.cargo]||'#0b1625';
+      let nomeDisplay = d.punicao>=3 ? d.nome+' (BANIDO)' : d.nome;
+      html+=`<div class="member-card" style="background:${bg}"><b contenteditable="${autorizado}" onblur="updateMembro('${doc.id}','nome',this.innerText,'${d.nome}')">${nomeDisplay}</b> - <span contenteditable="${autorizado}" onblur="updateMembro('${doc.id}','cargo',this.innerText,'${d.nome}')">${d.cargo}</span>${autorizado?` <button class="action" onclick="delMembro('${doc.id}','${d.nome}')">Excluir</button>`:''}</div>`;
+      pun+=`<div>${nomeDisplay} → <span class="${punicaoClass(d.punicao)}">${d.punicao}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao+1},'${d.nome}')">+</button>`:''}</div>`;
+      pt+=`<div class="${colorPontuacao(d.pontos)}">${nomeDisplay} → <span>${d.pontos}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos+1},'${d.nome}')">+</button>`:''}</div>`;
+    });
+    listaMembros.innerHTML=html;
+    listaPunicoes.innerHTML=pun;
+    listaPontuacao.innerHTML=pt;
+  });
+
+  // Cronograma
+  db.collection("cronograma").onSnapshot(snap=>{
+    let html='<div class="cronograma-container"><div class="cronograma-cell cronograma-header">Cronograma</div><div class="cronograma-cell cronograma-header">Ação</div><div class="cronograma-cell cronograma-header">Número</div>';
+    snap.forEach(doc=>{
+      let d = doc.data();
+      html+=`
+        <div class="cronograma-cell" style="background:${d.corTitulo}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','titulo',this.innerText)">${d.titulo}</span></div>
+        <div class="cronograma-cell" style="background:${d.corAcao}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','acao',this.innerText)">${d.acao}</span></div>
+        <div class="cronograma-cell" style="background:${d.corNumero}"><input type="number" class="cronograma-input" value="${d.numero}" ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)" disabled="${!autorizado}"`:"disabled"}></div>`;
+    });
+    html+='</div>';
+    listaCronograma.innerHTML=html;
+  });
+
+  // Histórico
+  if(autorizado){
+    db.collection("historico").orderBy("data","desc").onSnapshot(snap=>{
+      let html='';
+      snap.forEach(doc=>{
+        let d=doc.data();
+        html+=`<div>${new Date(d.data.seconds*1000).toLocaleString()} → ${d.acao}</div>`;
+      });
+      listaHistorico.innerHTML=html;
+    });
+  }
+}
+
+// Inicializa visualização
+refreshData();
+show("membros",document.querySelector("nav button"));
+</script>
+
+</body>
+</html>
