@@ -131,18 +131,17 @@ button.action:hover{
 </nav>
 
 <section id="login">
-  <h3>🔒 Permissão</h3>
+  <h3>🔒 Permissão de edição</h3>
   <input type="password" id="senha" placeholder="Senha">
-  <button class="action" onclick="login()">Entrar</button>
+  <button class="action" onclick="login()">Ativar edição</button>
 </section>
 
 <section id="membros">
   <h3>Membros</h3>
-  <div id="formMembros">
-    <input id="nome" placeholder="Nome" ${"disabled"}>
+  <div id="formMembros" style="display:none">
+    <input id="nome" placeholder="Nome">
     <select id="cargoSelect"><option value="">Selecione cargo</option></select>
-    <button class="action" onclick="addMembro()" style="display:none">Adicionar</button>
-    <button class="action" onclick="exportarMembros()">Exportar Planilha</button>
+    <button class="action" onclick="addMembro()">Adicionar</button>
   </div>
   <div id="listaMembros"></div>
 </section>
@@ -184,33 +183,32 @@ const db=firebase.firestore();
 let autorizado=false;
 let cargosMap = {};
 
+// Navegação
 function show(id, btn){
   document.querySelectorAll("section").forEach(s => s.style.display = "none");
-
   if(id === "historico" && !autorizado){
     document.getElementById('historico').style.display = 'block';
-    document.getElementById('listaHistorico').innerHTML = '<div class="mensagem-restrita">Acesso restrito: apenas líderes e subordinados autorizados podem visualizar este conteúdo.</div>';
+    document.getElementById('listaHistorico').innerHTML = '<div class="mensagem-restrita">Acesso restrito: apenas líderes podem visualizar esta área.</div>';
     document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     return;
   }
-
   document.getElementById(id).style.display = "block";
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
 }
 
+// Login apenas ativa edição
 function login(){
   if(senha.value==="yakuzanotopo2526"){
     autorizado=true;
-    alert("Permissão concedida");
-    document.getElementById('formMembros').querySelectorAll('input, select, button')[0].disabled=false;
-    document.getElementById('formMembros').querySelectorAll('button')[0].style.display='inline-block';
+    alert("Edição ativada!");
+    document.getElementById('formMembros').style.display='block';
     document.getElementById('formCargos').style.display='block';
-    refreshData();
   }else alert("Senha incorreta");
 }
 
+// Histórico
 function addHistorico(acao){
   db.collection("historico").add({acao,data:new Date()});
 }
@@ -222,20 +220,8 @@ function addCargo(){
   db.collection("cargos").add({nome:novoCargo.value,cor:corCargo.value})
     .then(()=>addHistorico(`Cargo ${novoCargo.value} adicionado`));
 }
-
-function delCargo(id,nome){
-  if(!autorizado) return;
-  if(confirm("Remover cargo "+nome+"?")){
-    db.collection("cargos").doc(id).delete();
-    addHistorico(`Cargo ${nome} removido`);
-  }
-}
-
-function updateCargo(id, campo, valor, nome){
-  if(!autorizado) return;
-  db.collection("cargos").doc(id).update({[campo]:valor});
-  addHistorico(`Cargo ${nome} alterado: ${campo} → ${valor}`);
-}
+function delCargo(id,nome){ if(!autorizado) return; if(confirm("Remover cargo "+nome+"?")){ db.collection("cargos").doc(id).delete(); addHistorico(`Cargo ${nome} removido`);} }
+function updateCargo(id,campo,valor,nome){ if(!autorizado) return; db.collection("cargos").doc(id).update({[campo]:valor}); addHistorico(`Cargo ${nome} alterado: ${campo} → ${valor}`); }
 
 // Membros
 function addMembro(){
@@ -243,113 +229,51 @@ function addMembro(){
   let nomeVal = nome.value;
   let cargoVal = cargoSelect.value;
   if(!nomeVal || !cargoVal) return alert("Preencha nome e selecione cargo");
-  db.collection("membros").add({
-    nome: nomeVal,
-    cargo: cargoVal,
-    punicao:0,
-    pontos:0
-  }).then(()=>addHistorico(`Membro ${nomeVal} adicionado`));
+  db.collection("membros").add({nome:nomeVal,cargo:cargoVal,punicao:0,pontos:0})
+    .then(()=>addHistorico(`Membro ${nomeVal} adicionado`));
 }
+function delMembro(id,nome){ if(!autorizado) return; if(confirm("Excluir membro "+nome+"?")){ db.collection("membros").doc(id).delete(); addHistorico(`Membro ${nome} removido`);} }
+function updateMembro(id,campo,valor,nome){ if(!autorizado) return; let valorFinal = campo==="punicao"||campo==="pontos"?Number(valor)||0:valor; db.collection("membros").doc(id).update({[campo]:valorFinal}); addHistorico(`Membro ${nome} alterou ${campo} → ${valorFinal}`); }
 
-function delMembro(id,nome){
-  if(!autorizado) return;
-  if(confirm("Excluir membro "+nome+"?")){
-    db.collection("membros").doc(id).delete();
-    addHistorico(`Membro ${nome} removido`);
-  }
-}
+// Função de cores
+function color(p){ if(p<=3) return "red"; if(p<=6) return "yellow"; return "green"; }
 
-function updateMembro(id,campo,valor,nome,elementoCard){
-  if(!autorizado) return;
-  let valorFinal = campo==="punicao"||campo==="pontos"?Number(valor)||0:valor;
-  db.collection("membros").doc(id).update({[campo]:valorFinal});
-  if(campo === "cargo" && elementoCard){
-    let cor = cargosMap[valorFinal] || '#0b1625';
-    elementoCard.style.background = cor;
-  }
-  addHistorico(`Membro ${nome} alterou ${campo} para ${valorFinal}`);
-}
-
-function color(p){
-  if(p<=3)return"red";
-  if(p<=6)return"yellow";
-  return"green";
-}
-
-// Export CSV
-function exportarMembros(){
-  db.collection("membros").get().then(snap=>{
-    let csv="Nome,Cargo,Punição,Pontos\n";
-    snap.forEach(doc=>{
-      let d=doc.data();
-      csv+=`${d.nome},${d.cargo},${d.punicao},${d.pontos}\n`;
-    });
-    let blob = new Blob([csv], {type:"text/csv"});
-    let link = document.createElement("a");
-    link.href=URL.createObjectURL(blob);
-    link.download="membros.csv";
-    link.click();
-  });
-}
-
-// Atualizar dados
+// Atualizar dados para todos (visualização sempre ativa)
 function refreshData(){
+  // Cargos
   db.collection("cargos").onSnapshot(snap=>{
-    cargosMap = {};
-    let options = '<option value="">Selecione cargo</option>';
-    let htmlCargos = '';
+    cargosMap={};
+    let options='<option value="">Selecione cargo</option>';
+    let htmlCargos='';
     snap.forEach(doc=>{
       let d=doc.data();
-      cargosMap[d.nome] = d.cor;
-      options += `<option value="${d.nome}">${d.nome}</option>`;
-      htmlCargos += `<div>
-        <span contenteditable="${autorizado}" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span>
-        <input type="color" class="color-picker" value="${d.cor}" onchange="updateCargo('${doc.id}','cor',this.value,'${d.nome}')">
-        <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button>
-      </div>`;
+      cargosMap[d.nome]=d.cor;
+      options+=`<option value="${d.nome}">${d.nome}</option>`;
+      htmlCargos+=autorizado? `<div><span contenteditable="true" onblur="updateCargo('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</span> <input type="color" class="color-picker" value="${d.cor}" onchange="updateCargo('${doc.id}','cor',this.value,'${d.nome}')"> <button class="action" onclick="delCargo('${doc.id}','${d.nome}')">Excluir</button></div>` : `<div>${d.nome} <div style="display:inline-block;width:20px;height:20px;background:${d.cor};margin-left:5px;"></div></div>`;
     });
-    cargoSelect.innerHTML = options;
-    listaCargos.innerHTML = htmlCargos;
+    cargoSelect.innerHTML=options;
+    listaCargos.innerHTML=htmlCargos;
   });
 
+  // Membros
   db.collection("membros").onSnapshot(snap=>{
     let html='',pun='',pt='';
     snap.forEach(doc=>{
-      let d=doc.data(),id=doc.id;
-      let bg = cargosMap[d.cargo] || '#0b1625';
-      if(d.punicao>=3){db.collection("membros").doc(id).delete(); return;}
-      html+=`<div class="member-card" style="background:${bg}" id="member-${id}">
-        <b>${d.nome}</b>
-        - <select disabled></select>
-        ${autorizado ? `<button class="action" onclick="delMembro('${id}','${d.nome}')">Excluir</button>` : ''}
-      </div>`;
-      pun+=`<div>${d.nome} → <span>${d.punicao}</span></div>`;
-      pt+=`<div class="${color(d.pontos)}">${d.nome} → <span>${d.pontos}</span></div>`;
+      let d=doc.data();
+      let bg=cargosMap[d.cargo]||'#0b1625';
+      html+=`<div class="member-card" style="background:${bg}"><b>${d.nome}</b> - <span>${d.cargo}</span>${autorizado?` <button class="action" onclick="delMembro('${doc.id}','${d.nome}')">Excluir</button>`:''}</div>`;
+      pun+=`<div>${d.nome} → <span>${d.punicao}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao+1},'${d.nome}')">+</button>`:''}</div>`;
+      pt+=`<div class="${color(d.pontos)}">${d.nome} → <span>${d.pontos}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos+1},'${d.nome}')">+</button>`:''}</div>`;
     });
-    listaMembros.innerHTML = html;
-    listaPunicoes.innerHTML = pun;
-    listaPontuacao.innerHTML = pt;
-
-    // preencher selects
-    document.querySelectorAll('.member-card').forEach(card=>{
-      let select = card.querySelector('select');
-      select.innerHTML = '<option value="">Selecione cargo</option>';
-      Object.keys(cargosMap).forEach(cargoName=>{
-        let opt = document.createElement('option');
-        opt.value = cargoName;
-        opt.text = cargoName;
-        select.appendChild(opt);
-        if(card.querySelector('b').innerText && card.querySelector('b').innerText === cargoName){
-          select.value = cargoName;
-        }
-      });
-      if(autorizado) select.disabled = false;
-    });
+    listaMembros.innerHTML=html;
+    listaPunicoes.innerHTML=pun;
+    listaPontuacao.innerHTML=pt;
   });
 
+  // Histórico
   if(autorizado){
     db.collection("historico").orderBy("data","desc").onSnapshot(snap=>{
-      let html="";
+      let html='';
       snap.forEach(doc=>{
         let d=doc.data();
         html+=`<div>${new Date(d.data.seconds*1000).toLocaleString()} → ${d.acao}</div>`;
@@ -359,7 +283,9 @@ function refreshData(){
   }
 }
 
-show("login",document.querySelector("nav button"));
+// Inicializa visualização para todos
+refreshData();
+show("membros",document.querySelector("nav button"));
 </script>
 
 </body>
