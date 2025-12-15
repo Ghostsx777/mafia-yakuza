@@ -1,3 +1,4 @@
+<script>
 const firebaseConfig={
     apiKey:"AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",
     authDomain:"mafia-yakuza.firebaseapp.com",
@@ -13,7 +14,7 @@ let membrosData=[];
 // Navegação
 function show(id, btn){
     document.querySelectorAll("section").forEach(s => s.style.display = "none");
-    if(id === "historico"){ // Historico não precisa de login, mas o conteúdo é restrito
+    if(id === "historico"){
         document.getElementById('historico').style.display = 'block';
         if(autorizado) {
             refreshHistorico();
@@ -30,7 +31,6 @@ function show(id, btn){
 
 // Login
 function login(){
-    // ATENÇÃO: SENHA HARDCODED NO CÓDIGO É INSEGURO!
     if(senha.value==="yakuzanotopo2526"){
         autorizado=true;
         alert("Edição ativada!");
@@ -38,7 +38,6 @@ function login(){
         document.getElementById('formCargos').style.display='block';
         document.getElementById('formCronograma').style.display='block';
         refreshData();
-        // Se estiver no histórico, recarrega após o login
         if(document.getElementById('historico').style.display === 'block') refreshHistorico(); 
     }else alert("Senha incorreta");
 }
@@ -50,7 +49,6 @@ function addHistorico(acao){
 
 function refreshHistorico(){
     if(!autorizado) return;
-    // Pega os 50 itens mais recentes
     db.collection("historico").orderBy("data", "desc").limit(50).onSnapshot(snap=>{
         let html='';
         snap.forEach(doc=>{
@@ -117,7 +115,6 @@ function addMembro() {
     if(!nomeVal) return alert("Digite o nome do membro");
     if(!cargoVal) return alert("Selecione o cargo");
     
-    // Define um valor de 'order' que será o tamanho atual da lista + 1
     const newOrder = membrosData.length > 0 ? membrosData[membrosData.length - 1].order + 1 : 0;
 
     db.collection("membros").add({
@@ -125,7 +122,7 @@ function addMembro() {
         cargo: cargoVal, 
         punicao: 0, 
         pontos: 0,
-        order: newOrder // Novo campo para ordenação
+        order: newOrder
     })
     .then(()=>{
         document.getElementById("nome").value=""; 
@@ -142,7 +139,6 @@ function refreshData(){
 }
 
 function refreshMembros(){
-    // Adicionado orderBy('order') para garantir a ordem persistente
     db.collection("membros").orderBy("order").onSnapshot(snap=>{
         membrosData=[];
         snap.forEach(doc=>{
@@ -182,22 +178,18 @@ function moveMembro(id,direction){
     }
     
     if(targetIndex !== -1){
-        // 1. Troca a ordem no array local para renderização imediata
         let temp = membrosData[targetIndex];
         membrosData[targetIndex] = membrosData[index];
         membrosData[index] = temp;
         
-        // 2. Atualiza a ordem no Firestore
         const currentOrder = membrosData[index].order;
         const targetOrder = membrosData[targetIndex].order;
         
-        // Aplica a nova ordem no Firestore (garantindo que os dados sejam salvos)
         db.collection('membros').doc(membrosData[index].id).update({order: targetOrder});
         db.collection('membros').doc(membrosData[targetIndex].id).update({order: currentOrder});
         
         addHistorico(`Ordem do membro **${membrosData[index].nome}** alterada.`);
     }
-    // Re-renderiza localmente para feedback imediato (será sobreposto pelo onSnapshot)
     renderMembros();
 }
 
@@ -305,7 +297,6 @@ function updateCronograma(id,campo,valor){
 
 function refreshCronograma(){
     db.collection("cronograma").onSnapshot(snap=>{
-        // Adiciona o cabeçalho fora do loop de dados
         let html=`
             <div class="cronograma-container">
                 <div class="cronograma-cell cronograma-header">Cronograma</div>
@@ -330,3 +321,4 @@ function refreshCronograma(){
 // Inicial
 show("login",document.querySelector("nav button"));
 refreshData();
+</script>
