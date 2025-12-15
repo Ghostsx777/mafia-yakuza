@@ -1,3 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Mafia Yakuza</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --bg:#050b14;
+  --panel:#0b1625;
+  --blue:#1f6feb;
+  --blue-dark:#0a3d91;
+  --text:#ffffff;
+}
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+header{
+  background:var(--panel);
+  padding:15px;
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+header img{height:50px;}
+nav{
+  display:flex;
+  background:#020814;
+  flex-wrap: wrap;
+}
+nav button{
+  flex:1;
+  padding:15px;
+  background:none;
+  border:none;
+  color:white;
+  cursor:pointer;
+  font-size:15px;
+}
+nav button.active,nav button:hover{
+  background:var(--blue);
+}
+section{
+  display:none;
+  padding:20px;
+}
+input, select{
+  padding:8px;
+  margin:5px;
+  border-radius:5px;
+  border:none;
+}
+button.action{
+  background:var(--blue);
+  border:none;
+  color:white;
+  padding:5px 10px;
+  cursor:pointer;
+  margin-left:5px;
+}
+button.action:hover{background:var(--blue-dark);}
+.color-picker{width:40px;height:25px;border:none;cursor:pointer;vertical-align: middle;}
+.mensagem-restrita{
+  text-align:center;
+  font-size:18px;
+  color:#c9c9c9;
+  padding:50px 0;
+  font-weight:bold;
+  border:2px dashed #555;
+  border-radius:10px;
+  background:#0b1625;
+}
+.member-container div{margin:5px 0;}
+.red{background:#9b1c1c}
+.yellow{background:#c9a227;color:black}
+.orange{background:#e67e22;color:black}
+.green{background:#137333}
+
+/* Cronograma estilo planilha */
+.cronograma-container{
+  display:grid;
+  grid-template-columns: 2fr 5fr 1fr 1fr;
+  gap:5px;
+  margin-top:10px;
+}
+.cronograma-header{
+  font-weight:bold;
+  text-align:center;
+  text-transform:uppercase;
+  background:#0b1625;
+  border:1px solid #1f2a44;
+  padding:8px;
+  border-radius:5px;
+}
+.cronograma-cell{
+  padding:8px;
+  border:1px solid #1f2a44;
+  border-radius:5px;
+  min-height:35px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  color:white;
+  transition: background 0.3s;
+}
+.cronograma-input{
+  width:100%;
+  border:none;
+  background:transparent;
+  text-align:center;
+  font-weight:bold;
+  color:white;
+}
+.drag-button{
+  cursor:pointer;
+  margin-left:5px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="logo.png">
+  <h2>Máfia Yakuza</h2>
+</header>
+
+<nav>
+  <button onclick="show('login',this)">Login</button>
+  <button onclick="show('membros',this)">Membros</button>
+  <button onclick="show('punicoes',this)">Punições</button>
+  <button onclick="show('pontuacao',this)">Pontuação</button>
+  <button onclick="show('cargos',this)">Cargos</button>
+  <button onclick="show('cronograma',this)">Cronograma</button>
+  <button onclick="show('historico',this)">Histórico</button>
+</nav>
+
+<section id="login">
+  <h3>🔒 Permissão de edição</h3>
+  <input type="password" id="senha" placeholder="Senha">
+  <button class="action" onclick="login()">Ativar edição</button>
+</section>
+
+<section id="membros">
+  <h3>Membros</h3>
+  <div id="formMembros" style="display:none">
+    <input id="nome" placeholder="Nome">
+    <select id="cargoSelect"><option value="">Selecione cargo</option></select>
+    <button class="action" onclick="addMembro()">Adicionar Membro</button>
+  </div>
+  <div id="listaMembros" class="member-container"></div>
+</section>
+
+<section id="punicoes">
+  <h3>Punições</h3>
+  <div id="listaPunicoes" class="member-container"></div>
+</section>
+
+<section id="pontuacao">
+  <h3>Pontuação</h3>
+  <div id="listaPontuacao" class="member-container"></div>
+</section>
+
+<section id="cargos">
+  <h3>Cargos</h3>
+  <div id="formCargos" style="display:none">
+    <input id="novoCargo" placeholder="Nome do cargo">
+    <input type="color" id="corCargo" value="#1f6feb">
+    <button class="action" onclick="addCargo()">Adicionar Cargo</button>
+  </div>
+  <div id="listaCargos"></div>
+</section>
+
+<section id="cronograma">
+  <h3>Cronograma</h3>
+  <div id="formCronograma" style="display:none">
+    <input id="tituloCronograma" placeholder="Cronograma">
+    <input id="acaoCronograma" placeholder="Ação">
+    <input type="number" id="numeroCronograma" value="0" min="0" max="20">
+    <input type="color" id="corTitulo" value="#0b1625" title="Cor do Cronograma">
+    <input type="color" id="corAcao" value="#0b1625" title="Cor da Ação">
+    <input type="color" id="corNumero" value="#1f6feb" title="Cor do Número">
+    <button class="action" onclick="addCronograma()">Adicionar</button>
+  </div>
+  <div id="listaCronograma" class="cronograma-container"></div>
+</section>
+
+<section id="historico">
+  <h3>Histórico de alterações</h3>
+  <div id="listaHistorico"></div>
+</section>
+
 <script>
 const firebaseConfig={
     apiKey:"AIzaSyD39A_6XKc6Ps4woqhStPO0ym6huCq2wW8",
@@ -115,6 +315,7 @@ function addMembro() {
     if(!nomeVal) return alert("Digite o nome do membro");
     if(!cargoVal) return alert("Selecione o cargo");
     
+    // Define a ordem: último valor de ordem + 1
     const newOrder = membrosData.length > 0 ? membrosData[membrosData.length - 1].order + 1 : 0;
 
     db.collection("membros").add({
@@ -122,7 +323,7 @@ function addMembro() {
         cargo: cargoVal, 
         punicao: 0, 
         pontos: 0,
-        order: newOrder
+        order: newOrder // Campo de ordenação
     })
     .then(()=>{
         document.getElementById("nome").value=""; 
@@ -139,6 +340,7 @@ function refreshData(){
 }
 
 function refreshMembros(){
+    // Ordena por "order" para manter a ordem definida pelos botões
     db.collection("membros").orderBy("order").onSnapshot(snap=>{
         membrosData=[];
         snap.forEach(doc=>{
@@ -178,10 +380,12 @@ function moveMembro(id,direction){
     }
     
     if(targetIndex !== -1){
+        // 1. Troca a ordem no array local
         let temp = membrosData[targetIndex];
         membrosData[targetIndex] = membrosData[index];
         membrosData[index] = temp;
         
+        // 2. Salva a nova ordem no Firestore
         const currentOrder = membrosData[index].order;
         const targetOrder = membrosData[targetIndex].order;
         
@@ -322,3 +526,6 @@ function refreshCronograma(){
 show("login",document.querySelector("nav button"));
 refreshData();
 </script>
+
+</body>
+</html>
