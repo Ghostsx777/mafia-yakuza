@@ -112,6 +112,10 @@ button.action:hover{
 .punicao1{background:yellow;color:black;padding:2px 5px;border-radius:3px;}
 .punicao2{background:orange;color:white;padding:2px 5px;border-radius:3px;}
 .punicao3{background:red;color:white;padding:2px 5px;border-radius:3px;}
+
+.red{background:#9b1c1c}
+.yellow{background:#c9a227;color:black}
+.green{background:#137333}
 </style>
 </head>
 
@@ -237,7 +241,7 @@ function addMembro(){
     .then(()=>addHistorico(`Membro ${nomeVal} adicionado`));
 }
 function delMembro(id,nome){ if(!autorizado) return; if(confirm("Excluir membro "+nome+"?")){ db.collection("membros").doc(id).delete(); addHistorico(`Membro ${nome} removido`);} }
-function updateMembro(id,campo,valor,nome){ if(!autorizado) return; let valorFinal = campo==="punicao"||campo==="pontos"?Number(valor)||0:valor; db.collection("membros").doc(id).update({[campo]:valorFinal}); addHistorico(`Membro ${nome} alterou ${campo} → ${valorFinal}`); }
+function updateMembro(id,campo,valor,nome){ if(!autorizado) return; let valorFinal = campo==="punicao"||campo==="pontos"||campo==="ordem"?Number(valor)||0:valor; db.collection("membros").doc(id).update({[campo]:valorFinal}); addHistorico(`Membro ${nome} alterou ${campo} → ${valorFinal}`); }
 
 // Funções de cor de punição
 function punicaoClass(p){
@@ -245,6 +249,14 @@ function punicaoClass(p){
   if(p===1) return 'punicao1';
   if(p===2) return 'punicao2';
   return 'punicao3';
+}
+
+// Função de cor de pontuação
+function colorPontuacao(p){
+  if(p>=0 && p<=3) return "red";
+  if(p>=4 && p<=6) return "yellow";
+  if(p>=7) return "green";
+  return "red";
 }
 
 // Atualizar dados para todos
@@ -276,8 +288,8 @@ function refreshData(){
       // Punições
       pun+=`<div>${nomeDisplay} → <span class="${punicaoClass(d.punicao)}">${d.punicao}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao+1},'${d.nome}')">+</button>`:''}</div>`;
 
-      // Pontuação
-      pt+=`<div>${nomeDisplay} → <span>${d.pontos}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos+1},'${d.nome}')">+</button>`:''}</div>`;
+      // Pontuação com cores dinâmicas
+      pt+=`<div class="${colorPontuacao(d.pontos)}">${nomeDisplay} → <span>${d.pontos}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos+1},'${d.nome}')">+</button>`:''}</div>`;
     });
     listaMembros.innerHTML=html;
     listaPunicoes.innerHTML=pun;
