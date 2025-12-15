@@ -103,7 +103,7 @@ button.action:hover{
 /* Planilha Cronograma */
 .cronograma-container{
   display:grid;
-  grid-template-columns: 2fr 5fr 1fr; /* Cronograma | Ação | Número */
+  grid-template-columns: 2fr 5fr 1fr 1fr; /* Cronograma | Ação | Número | Ações */
   gap:5px;
   margin-top:10px;
 }
@@ -301,6 +301,25 @@ function refreshCargos(){
   });
 }
 
+// Adicionar Membro (corrigido)
+function addMembro() {
+  if (!autorizado) return alert("Sem permissão");
+  let nomeVal = nome.value.trim();
+  let cargoVal = cargoSelect.value;
+  if(!nomeVal) return alert("Digite o nome do membro");
+  if(!cargoVal) return alert("Selecione o cargo");
+  db.collection("membros").add({
+    nome: nomeVal,
+    cargo: cargoVal,
+    punicao: 0,
+    pontos: 0
+  }).then(() => {
+    nome.value = '';
+    cargoSelect.value = '';
+    addHistorico(`Membro ${nomeVal} adicionado com cargo ${cargoVal}`);
+  });
+}
+
 // Cronograma
 function addCronograma(){
   if(!autorizado) return alert("Sem permissão");
@@ -314,20 +333,31 @@ function addCronograma(){
   db.collection("cronograma").add({titulo,acao,numero,corTitulo:corT,corAcao:corA,corNumero:corN})
     .then(()=>addHistorico(`Cronograma adicionado: ${titulo} | ${acao} | ${numero}`));
 }
+
+function delCronograma(id){
+  if(!autorizado) return;
+  if(confirm("Remover esta entrada do cronograma?")){
+    db.collection("cronograma").doc(id).delete();
+    addHistorico(`Cronograma ${id} removido`);
+  }
+}
+
 function updateCronograma(id,campo,valor){
   if(!autorizado) return;
   db.collection("cronograma").doc(id).update({[campo]:valor});
   addHistorico(`Cronograma atualizado: ${id} → ${campo} = ${valor}`);
 }
+
 function refreshCronograma(){
   db.collection("cronograma").onSnapshot(snap=>{
-    let html='<div class="cronograma-container"><div class="cronograma-cell cronograma-header">Cronograma</div><div class="cronograma-cell cronograma-header">Ação</div><div class="cronograma-cell cronograma-header">Número</div>';
+    let html='<div class="cronograma-container"><div class="cronograma-cell cronograma-header">Cronograma</div><div class="cronograma-cell cronograma-header">Ação</div><div class="cronograma-cell cronograma-header">Número</div><div class="cronograma-cell cronograma-header">Ações</div>';
     snap.forEach(doc=>{
       let d = doc.data();
       html+=`
         <div class="cronograma-cell" style="background:${d.corTitulo}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','titulo',this.innerText)">${d.titulo}</span></div>
         <div class="cronograma-cell" style="background:${d.corAcao}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','acao',this.innerText)">${d.acao}</span></div>
-        <div class="cronograma-cell" style="background:${d.corNumero}"><input type="number" class="cronograma-input" value="${d.numero}" ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)"`:"disabled"}></div>`;
+        <div class="cronograma-cell" style="background:${d.corNumero}"><input type="number" class="cronograma-input" value="${d.numero}" ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)"`:"disabled"}></div>
+        <div class="cronograma-cell">${autorizado?`<button class="action" onclick="delCronograma('${doc.id}')">Excluir</button>`:''}</div>`;
     });
     html+='</div>';
     listaCronograma.innerHTML=html;
