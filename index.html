@@ -141,7 +141,7 @@ button.action:hover{
   <div id="formMembros" style="display:none">
     <input id="nome" placeholder="Nome">
     <select id="cargoSelect"><option value="">Selecione cargo</option></select>
-    <button class="action" onclick="addMembro()">Adicionar</button>
+    <button class="action" onclick="addMembro()">Adicionar Membro</button>
   </div>
   <div id="listaMembros"></div>
 </section>
@@ -238,7 +238,7 @@ function updateMembro(id,campo,valor,nome){ if(!autorizado) return; let valorFin
 // Função de cores
 function color(p){ if(p<=3) return "red"; if(p<=6) return "yellow"; return "green"; }
 
-// Atualizar dados para todos (visualização sempre ativa)
+// Atualizar dados para todos
 function refreshData(){
   // Cargos
   db.collection("cargos").onSnapshot(snap=>{
@@ -261,7 +261,7 @@ function refreshData(){
     snap.forEach(doc=>{
       let d=doc.data();
       let bg=cargosMap[d.cargo]||'#0b1625';
-      html+=`<div class="member-card" style="background:${bg}"><b>${d.nome}</b> - <span>${d.cargo}</span>${autorizado?` <button class="action" onclick="delMembro('${doc.id}','${d.nome}')">Excluir</button>`:''}</div>`;
+      html+=`<div class="member-card" style="background:${bg}"><b contenteditable="${autorizado}" onblur="updateMembro('${doc.id}','nome',this.innerText,'${d.nome}')">${d.nome}</b> - <span contenteditable="${autorizado}" onblur="updateMembro('${doc.id}','cargo',this.innerText,'${d.nome}')">${d.cargo}</span>${autorizado?` <button class="action" onclick="delMembro('${doc.id}','${d.nome}')">Excluir</button>`:''}</div>`;
       pun+=`<div>${d.nome} → <span>${d.punicao}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao+1},'${d.nome}')">+</button>`:''}</div>`;
       pt+=`<div class="${color(d.pontos)}">${d.nome} → <span>${d.pontos}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos+1},'${d.nome}')">+</button>`:''}</div>`;
     });
