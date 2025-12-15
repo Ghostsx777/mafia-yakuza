@@ -132,6 +132,7 @@ button.action:hover{
   <button onclick="show('punicoes',this)">Punições</button>
   <button onclick="show('pontuacao',this)">Pontuação</button>
   <button onclick="show('cargos',this)">Cargos</button>
+  <button onclick="show('cronograma',this)">Cronograma</button>
   <button onclick="show('historico',this)">Histórico</button>
 </nav>
 
@@ -170,6 +171,19 @@ button.action:hover{
     <button class="action" onclick="addCargo()">Adicionar Cargo</button>
   </div>
   <div id="listaCargos"></div>
+</section>
+
+<section id="cronograma">
+  <h3>Cronograma</h3>
+  <div id="formCronograma" style="display:none">
+    <input id="tituloCronograma" placeholder="Título da ação">
+    <input type="text" id="acaoCronograma" placeholder="Ação da organização">
+    <select id="numeroCronograma">
+      ${[...Array(21).keys()].map(i => `<option value="${i}">${i}</option>`).join('')}
+    </select>
+    <button class="action" onclick="addCronograma()">Adicionar ao cronograma</button>
+  </div>
+  <div id="listaCronograma"></div>
 </section>
 
 <section id="historico">
@@ -211,6 +225,7 @@ function login(){
     alert("Edição ativada!");
     document.getElementById('formMembros').style.display='block';
     document.getElementById('formCargos').style.display='block';
+    document.getElementById('formCronograma').style.display='block';
     refreshData(); // Atualiza botões de edição imediatamente
   }else alert("Senha incorreta");
 }
@@ -259,6 +274,26 @@ function colorPontuacao(p){
   return "red";
 }
 
+// Cronograma
+function addCronograma(){
+  if(!autorizado) return alert("Sem permissão");
+  let titulo = tituloCronograma.value.trim();
+  let acao = acaoCronograma.value.trim();
+  let numero = Number(numeroCronograma.value);
+  if(!titulo || !acao) return alert("Preencha título e ação");
+  db.collection("cronograma").add({titulo,acao,numero})
+    .then(()=>addHistorico(`Cronograma adicionado: ${titulo} | ${acao} | ${numero}`));
+}
+function delCronograma(id,titulo){
+  if(!autorizado) return;
+  if(confirm("Remover cronograma: "+titulo+"?")) db.collection("cronograma").doc(id).delete();
+}
+function updateCronograma(id,valor){
+  if(!autorizado) return;
+  db.collection("cronograma").doc(id).update({numero:Number(valor)});
+  addHistorico(`Cronograma atualizado: ${id} → numero ${valor}`);
+}
+
 // Atualizar dados para todos
 function refreshData(){
   // Cargos
@@ -296,6 +331,23 @@ function refreshData(){
     listaPontuacao.innerHTML=pt;
   });
 
+  // Cronograma
+  db.collection("cronograma").onSnapshot(snap=>{
+    let html='';
+    snap.forEach(doc=>{
+      let d = doc.data();
+      let numeroOptions = [...Array(21).keys()].map(i => `<option value="${i}" ${i===d.numero?'selected':''}>${i}</option>`).join('');
+      html+=`<div style="display:flex;align-items:center;gap:10px;margin:5px 0;">
+        <b>${d.titulo}</b> | <span>${d.acao}</span> 
+        <select ${autorizado?`onchange="updateCronograma('${doc.id}',this.value)"`:'disabled'}>
+          ${numeroOptions}
+        </select>
+        ${autorizado?`<button class="action" onclick="delCronograma('${doc.id}','${d.titulo}')">Excluir</button>`:''}
+      </div>`;
+    });
+    listaCronograma.innerHTML = html;
+  });
+
   // Histórico
   if(autorizado){
     db.collection("historico").orderBy("data","desc").onSnapshot(snap=>{
@@ -309,7 +361,7 @@ function refreshData(){
   }
 }
 
-// Inicializa visualização para todos
+// Inicializa visualização
 refreshData();
 show("membros",document.querySelector("nav button"));
 </script>
