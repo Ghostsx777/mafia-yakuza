@@ -139,6 +139,15 @@ button.action:hover{
   font-weight:bold;
   color:white;
 }
+
+/* Área Membros/Punições/Pontuação */
+.member-container div{
+  margin:5px 0;
+}
+.red{background:#9b1c1c}
+.yellow{background:#c9a227;color:black}
+.orange{background:#e67e22;color:black}
+.green{background:#137333}
 </style>
 </head>
 
@@ -172,17 +181,17 @@ button.action:hover{
     <select id="cargoSelect"><option value="">Selecione cargo</option></select>
     <button class="action" onclick="addMembro()">Adicionar Membro</button>
   </div>
-  <div id="listaMembros"></div>
+  <div id="listaMembros" class="member-container"></div>
 </section>
 
 <section id="punicoes">
   <h3>Punições</h3>
-  <div id="listaPunicoes"></div>
+  <div id="listaPunicoes" class="member-container"></div>
 </section>
 
 <section id="pontuacao">
   <h3>Pontuação</h3>
-  <div id="listaPontuacao"></div>
+  <div id="listaPontuacao" class="member-container"></div>
 </section>
 
 <section id="cargos">
@@ -303,20 +312,26 @@ function refreshCargos(){
 // Adicionar Membro (corrigido)
 function addMembro() {
   if (!autorizado) return alert("Sem permissão");
-  let nomeVal = nome.value.trim();
-  let cargoVal = cargoSelect.value;
+
+  const nomeInput = document.getElementById("nome");
+  const cargoSelectEl = document.getElementById("cargoSelect");
+
+  let nomeVal = nomeInput.value.trim();
+  let cargoVal = cargoSelectEl.value;
+
   if(!nomeVal) return alert("Digite o nome do membro");
   if(!cargoVal) return alert("Selecione o cargo");
+
   db.collection("membros").add({
     nome: nomeVal,
     cargo: cargoVal,
     punicao: 0,
     pontos: 0
   }).then(() => {
-    nome.value = '';
-    cargoSelect.value = '';
+    nomeInput.value = '';
+    cargoSelectEl.value = '';
     addHistorico(`Membro ${nomeVal} adicionado com cargo ${cargoVal}`);
-  });
+  }).catch(err => alert("Erro ao adicionar membro: " + err));
 }
 
 // Cronograma
