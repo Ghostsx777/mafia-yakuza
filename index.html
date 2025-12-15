@@ -65,6 +65,8 @@ section{
 input, select{
   padding:8px;
   margin:5px;
+  border-radius:5px;
+  border:none;
 }
 
 button.action{
@@ -99,39 +101,39 @@ button.action:hover{
 }
 
 /* Planilha Cronograma */
-.cronograma-table{
+.cronograma-container{
   display:grid;
-  grid-template-columns: 2fr 4fr 1fr 1fr; /* Título | Ação | Número | Ações (Excluir) */
+  grid-template-columns: 2fr 5fr 1fr 1fr; /* Título | Ação | Número | Excluir */
   gap:5px;
   margin-top:10px;
 }
 
-.cronograma-table-header{
+.cronograma-header{
   font-weight:bold;
   text-align:center;
+  text-transform:uppercase;
 }
 
 .cronograma-cell{
   padding:8px;
   border:1px solid #1f2a44;
   border-radius:5px;
+  min-height:35px;
   display:flex;
   align-items:center;
   justify-content:center;
-  min-height:35px;
+  font-weight:bold;
+  color:white;
   transition: background 0.3s;
 }
 
-.cronograma-number{
+.cronograma-input{
+  width:100%;
+  border:none;
+  background:transparent;
+  text-align:center;
   font-weight:bold;
-  font-size:18px;
-  width:40px;
-  height:35px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:5px;
-  cursor:pointer;
+  color:white;
 }
 
 </style>
@@ -196,13 +198,13 @@ button.action:hover{
   <div id="formCronograma" style="display:none">
     <input id="tituloCronograma" placeholder="Título da ação">
     <input id="acaoCronograma" placeholder="Ação">
-    <select id="numeroCronograma">${[...Array(21).keys()].map(i=>`<option value="${i}">${i}</option>`).join('')}</select>
+    <input type="number" id="numeroCronograma" value="0" min="0" max="20">
     <input type="color" id="corTitulo" value="#0b1625" title="Cor do Título">
     <input type="color" id="corAcao" value="#0b1625" title="Cor da Ação">
     <input type="color" id="corNumero" value="#1f6feb" title="Cor do Número">
     <button class="action" onclick="addCronograma()">Adicionar</button>
   </div>
-  <div id="listaCronograma" class="cronograma-table"></div>
+  <div id="listaCronograma" class="cronograma-container"></div>
 </section>
 
 <section id="historico">
@@ -349,22 +351,16 @@ function refreshData(){
 
   // Cronograma
   db.collection("cronograma").onSnapshot(snap=>{
-    let html='<div class="cronograma-table-header"><div class="cronograma-cell">Título</div><div class="cronograma-cell">Ação</div><div class="cronograma-cell">Número</div><div class="cronograma-cell">Ações</div></div>';
+    let html='<div class="cronograma-container"><div class="cronograma-cell cronograma-header">Título</div><div class="cronograma-cell cronograma-header">Ação</div><div class="cronograma-cell cronograma-header">Número</div><div class="cronograma-cell cronograma-header">Ações</div>';
     snap.forEach(doc=>{
       let d = doc.data();
-      html+=`<div class="cronograma-table">
-        <div class="cronograma-cell" style="background:${d.corTitulo}">${d.titulo}</div>
-        <div class="cronograma-cell" style="background:${d.corAcao}">${d.acao}</div>
-        <div class="cronograma-number" style="background:${d.corNumero}">
-          <select ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)"`:'disabled'}>
-            ${[...Array(21).keys()].map(i=>`<option value="${i}" ${i===d.numero?'selected':''}>${i}</option>`).join('')}
-          </select>
-        </div>
-        <div class="cronograma-cell">
-          ${autorizado?`<button class="action" onclick="delCronograma('${doc.id}','${d.titulo}')">Excluir</button>`:''}
-        </div>
-      </div>`;
+      html+=`
+        <div class="cronograma-cell" style="background:${d.corTitulo}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','titulo',this.innerText)">${d.titulo}</span></div>
+        <div class="cronograma-cell" style="background:${d.corAcao}"><span contenteditable="${autorizado}" onblur="updateCronograma('${doc.id}','acao',this.innerText)">${d.acao}</span></div>
+        <div class="cronograma-cell" style="background:${d.corNumero}"><input type="number" class="cronograma-input" value="${d.numero}" ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)" disabled="${!autorizado}"`:"disabled"}></div>
+        <div class="cronograma-cell">${autorizado?`<button class="action" onclick="delCronograma('${doc.id}','${d.titulo}')">Excluir</button>`:''}</div>`;
     });
+    html+='</div>';
     listaCronograma.innerHTML=html;
   });
 
