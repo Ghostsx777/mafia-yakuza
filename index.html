@@ -125,17 +125,17 @@ let membrosData=[];
 // Navegação
 function show(id, btn){
   document.querySelectorAll("section").forEach(s => s.style.display = "none");
+
   if(id==='historico' && !autorizado){
     document.getElementById('historico').style.display = 'block';
     document.getElementById('listaHistorico').innerHTML = '<div class="mensagem-restrita">Acesso restrito: apenas líderes podem visualizar esta área.</div>';
-    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    return;
+  } else {
+    document.getElementById(id).style.display = "block";
+    if(id==='historico' && autorizado) refreshHistorico();
   }
-  document.getElementById(id).style.display = "block";
+
   document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
-  if(id==='historico' && autorizado) refreshHistorico();
 }
 
 // Login
@@ -354,7 +354,9 @@ function refreshCronograma(){
   });
 }
 
-show("login",document.querySelector("nav button"));
+// Inicializa dados
+refreshData();
+show("membros",document.querySelector("nav button"));
 </script>
 </body>
 </html>
