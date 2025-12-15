@@ -67,16 +67,6 @@ input, select{
   margin:5px;
 }
 
-.member-card, .cronograma-row{
-  padding:5px;
-  margin:5px 0;
-  border-radius:5px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  transition: background 0.3s;
-}
-
 button.action{
   background:var(--blue);
   border:none;
@@ -108,17 +98,42 @@ button.action:hover{
   background:#0b1625;
 }
 
-.punicao0{background:green;color:white;padding:2px 5px;border-radius:3px;}
-.punicao1{background:yellow;color:black;padding:2px 5px;border-radius:3px;}
-.punicao2{background:orange;color:white;padding:2px 5px;border-radius:3px;}
-.punicao3{background:red;color:white;padding:2px 5px;border-radius:3px;}
+/* Planilha Cronograma */
+.cronograma-table{
+  display:grid;
+  grid-template-columns: 2fr 4fr 1fr 1fr; /* Título | Ação | Número | Ações (Excluir) */
+  gap:5px;
+  margin-top:10px;
+}
 
-.red{background:#9b1c1c}
-.yellow{background:#c9a227;color:black}
-.green{background:#137333}
+.cronograma-table-header{
+  font-weight:bold;
+  text-align:center;
+}
 
-.cronograma-table{width:100%;border-collapse:collapse;margin-top:10px;}
-.cronograma-table th, .cronograma-table td{border:1px solid #1f2a44;padding:8px;text-align:center;}
+.cronograma-cell{
+  padding:8px;
+  border:1px solid #1f2a44;
+  border-radius:5px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:35px;
+  transition: background 0.3s;
+}
+
+.cronograma-number{
+  font-weight:bold;
+  font-size:18px;
+  width:40px;
+  height:35px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:5px;
+  cursor:pointer;
+}
+
 </style>
 </head>
 
@@ -182,9 +197,12 @@ button.action:hover{
     <input id="tituloCronograma" placeholder="Título da ação">
     <input id="acaoCronograma" placeholder="Ação">
     <select id="numeroCronograma">${[...Array(21).keys()].map(i=>`<option value="${i}">${i}</option>`).join('')}</select>
+    <input type="color" id="corTitulo" value="#0b1625" title="Cor do Título">
+    <input type="color" id="corAcao" value="#0b1625" title="Cor da Ação">
+    <input type="color" id="corNumero" value="#1f6feb" title="Cor do Número">
     <button class="action" onclick="addCronograma()">Adicionar</button>
   </div>
-  <div id="listaCronograma"></div>
+  <div id="listaCronograma" class="cronograma-table"></div>
 </section>
 
 <section id="historico">
@@ -202,7 +220,7 @@ firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
 let autorizado=false;
-let cargosMap = {};
+let cargosMap={};
 
 // Navegação
 function show(id, btn){
@@ -219,7 +237,7 @@ function show(id, btn){
   btn.classList.add("active");
 }
 
-// Login apenas ativa edição
+// Login
 function login(){
   if(senha.value==="yakuzanotopo2526"){
     autorizado=true;
@@ -227,7 +245,7 @@ function login(){
     document.getElementById('formMembros').style.display='block';
     document.getElementById('formCargos').style.display='block';
     document.getElementById('formCronograma').style.display='block';
-    refreshData(); // Atualiza botões de edição imediatamente
+    refreshData();
   }else alert("Senha incorreta");
 }
 
@@ -259,15 +277,13 @@ function addMembro(){
 function delMembro(id,nome){ if(!autorizado) return; if(confirm("Excluir membro "+nome+"?")){ db.collection("membros").doc(id).delete(); addHistorico(`Membro ${nome} removido`);} }
 function updateMembro(id,campo,valor,nome){ if(!autorizado) return; let valorFinal = campo==="punicao"||campo==="pontos"||campo==="ordem"?Number(valor)||0:valor; db.collection("membros").doc(id).update({[campo]:valorFinal}); addHistorico(`Membro ${nome} alterou ${campo} → ${valorFinal}`); }
 
-// Funções de cor de punição
+// Punições
 function punicaoClass(p){
   if(p<=0) return 'punicao0';
   if(p===1) return 'punicao1';
   if(p===2) return 'punicao2';
   return 'punicao3';
 }
-
-// Função de cor de pontuação
 function colorPontuacao(p){
   if(p>=0 && p<=3) return "red";
   if(p>=4 && p<=6) return "yellow";
@@ -281,21 +297,24 @@ function addCronograma(){
   let titulo = tituloCronograma.value.trim();
   let acao = acaoCronograma.value.trim();
   let numero = Number(numeroCronograma.value);
+  let corT = corTitulo.value;
+  let corA = corAcao.value;
+  let corN = corNumero.value;
   if(!titulo || !acao) return alert("Preencha título e ação");
-  db.collection("cronograma").add({titulo,acao,numero})
+  db.collection("cronograma").add({titulo,acao,numero,corTitulo:corT,corAcao:corA,corNumero:corN})
     .then(()=>addHistorico(`Cronograma adicionado: ${titulo} | ${acao} | ${numero}`));
 }
 function delCronograma(id,titulo){
   if(!autorizado) return;
   if(confirm("Remover cronograma: "+titulo+"?")) db.collection("cronograma").doc(id).delete();
 }
-function updateCronograma(id,valor){
+function updateCronograma(id,campo,valor){
   if(!autorizado) return;
-  db.collection("cronograma").doc(id).update({numero:Number(valor)});
-  addHistorico(`Cronograma atualizado: ${id} → numero ${valor}`);
+  db.collection("cronograma").doc(id).update({[campo]:valor});
+  addHistorico(`Cronograma atualizado: ${id} → ${campo} = ${valor}`);
 }
 
-// Atualizar dados para todos
+// Atualizar visualizações
 function refreshData(){
   // Cargos
   db.collection("cargos").onSnapshot(snap=>{
@@ -320,11 +339,7 @@ function refreshData(){
       let bg=cargosMap[d.cargo]||'#0b1625';
       let nomeDisplay = d.punicao>=3 ? d.nome+' (BANIDO)' : d.nome;
       html+=`<div class="member-card" style="background:${bg}"><b contenteditable="${autorizado}" onblur="updateMembro('${doc.id}','nome',this.innerText,'${d.nome}')">${nomeDisplay}</b> - <span contenteditable="${autorizado}" onblur="updateMembro('${doc.id}','cargo',this.innerText,'${d.nome}')">${d.cargo}</span>${autorizado?` <button class="action" onclick="delMembro('${doc.id}','${d.nome}')">Excluir</button>`:''}</div>`;
-
-      // Punições
       pun+=`<div>${nomeDisplay} → <span class="${punicaoClass(d.punicao)}">${d.punicao}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','punicao',${d.punicao+1},'${d.nome}')">+</button>`:''}</div>`;
-
-      // Pontuação
       pt+=`<div class="${colorPontuacao(d.pontos)}">${nomeDisplay} → <span>${d.pontos}</span>${autorizado?` <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos-1},'${d.nome}')">-</button> <button class="action" onclick="updateMembro('${doc.id}','pontos',${d.pontos+1},'${d.nome}')">+</button>`:''}</div>`;
     });
     listaMembros.innerHTML=html;
@@ -334,17 +349,23 @@ function refreshData(){
 
   // Cronograma
   db.collection("cronograma").onSnapshot(snap=>{
-    let html='';
+    let html='<div class="cronograma-table-header"><div class="cronograma-cell">Título</div><div class="cronograma-cell">Ação</div><div class="cronograma-cell">Número</div><div class="cronograma-cell">Ações</div></div>';
     snap.forEach(doc=>{
       let d = doc.data();
-      let numeroOptions = [...Array(21).keys()].map(i => `<option value="${i}" ${i===d.numero?'selected':''}>${i}</option>`).join('');
-      html+=`<div class="cronograma-row" style="display:flex;align-items:center;gap:10px;">
-        <b>${d.titulo}</b> | <span>${d.acao}</span> 
-        <select ${autorizado?`onchange="updateCronograma('${doc.id}',this.value)"`:'disabled'}>${numeroOptions}</select>
-        ${autorizado?`<button class="action" onclick="delCronograma('${doc.id}','${d.titulo}')">Excluir</button>`:''}
+      html+=`<div class="cronograma-table">
+        <div class="cronograma-cell" style="background:${d.corTitulo}">${d.titulo}</div>
+        <div class="cronograma-cell" style="background:${d.corAcao}">${d.acao}</div>
+        <div class="cronograma-number" style="background:${d.corNumero}">
+          <select ${autorizado?`onchange="updateCronograma('${doc.id}','numero',this.value)"`:'disabled'}>
+            ${[...Array(21).keys()].map(i=>`<option value="${i}" ${i===d.numero?'selected':''}>${i}</option>`).join('')}
+          </select>
+        </div>
+        <div class="cronograma-cell">
+          ${autorizado?`<button class="action" onclick="delCronograma('${doc.id}','${d.titulo}')">Excluir</button>`:''}
+        </div>
       </div>`;
     });
-    listaCronograma.innerHTML = html;
+    listaCronograma.innerHTML=html;
   });
 
   // Histórico
